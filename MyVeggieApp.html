@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>MyVeggie App</title>
+<!-- Tailwind CSS v3 CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- BEGIN: Custom Styles -->
+<style data-purpose="branding-colors">
+    :root {
+      --bladgroen: #4CAF50;
+    }
+    .text-bladgroen { color: var(--bladgroen); }
+    .bg-bladgroen { background-color: var(--bladgroen); }
+    .fill-bladgroen { fill: var(--bladgroen); }
+    .border-bladgroen { border-color: var(--bladgroen); }
+  </style>
+<style data-purpose="canvas-layout">
+    #canvasWorkspace {
+      position: absolute;
+      width: 2000px;
+      height: 2000px;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(1);
+      background-color: #0a0a0a;
+      background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+
+    .garden-line-container {
+      position: absolute;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      touch-action: none;
+      transform-origin: 0px 20px;
+      padding-right: 20px;
+    }
+
+    .garden-veg-container {
+      position: absolute;
+      width: 60px;
+      height: 65px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      z-index: 20;
+    }
+
+    .garden-line {
+      height: 4px;
+      background-color: #5D4037;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .stretch-handle {
+      position: absolute;
+      right: 0px; 
+      width: 16px;
+      height: 16px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      cursor: ew-resize;
+      display: none;
+      z-index: 30;
+      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+    }
+    
+    .is-building .stretch-handle {
+      display: block;
+    }
+    
+    .is-selected {
+      outline: 2px dashed #4CAF50;
+      outline-offset: 4px;
+    }
+
+    .is-building .garden-line-container, 
+    .is-building .garden-veg-container {
+      cursor: move;
+    }
+
+    /* Library Screen Custom Scroll */
+    #libraryList::-webkit-scrollbar {
+      width: 4px;
+    }
+    #libraryList::-webkit-scrollbar-track {
+      background: #000;
+    }
+    #libraryList::-webkit-scrollbar-thumb {
+      background: #333;
+      border-radius: 10px;
+    }
+    
+    .library-accordion-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .library-accordion-item.active .library-accordion-content {
+      max-height: 1200px;
+      transition: max-height 0.5s ease-in;
+    }
+    .library-accordion-item.active .chevron-icon {
+      transform: rotate(180deg);
+    }
+  </style>
+<style>#vegSubMenu span { font-size: 0.75rem !important; line-height: 1rem !important; padding-top: 4px; }</style></head>
+<body class="bg-black text-white min-h-screen flex flex-col font-sans touch-none select-none">
+<!-- BEGIN: Firebase & Auth Logic -->
+<script data-purpose="firebase-setup" type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyByW25sPnpfCiuJobldmAdglpvqSTVkauY",
+      authDomain: "myveggieapp-859a6.firebaseapp.com",
+      projectId: "myveggieapp-859a6",
+      storageBucket: "myveggieapp-859a6.firebasestorage.app",
+      messagingSenderId: "20511651208",
+      appId: "1:20511651208:web:eda2073c4bd2699d1af63d"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    window.handleAuth = async (mode) => {
+      const email = document.getElementById('emailInput').value;
+      const pass = document.getElementById('passInput').value;
+      
+      if(!email || !pass) return alert(window.getI18n('alertFillEmail'));
+      
+      if(mode === 'register') {
+        const passConfirm = document.getElementById('passConfirmInput').value;
+        if(pass !== passConfirm) {
+          return alert(window.getI18n('alertPassMismatch'));
+        }
+      }
+      
+      try {
+        const cred = mode === 'login' 
+          ? await signInWithEmailAndPassword(auth, email, pass)
+          : await createUserWithEmailAndPassword(auth, email, pass);
+        
+        await window.loadGardenFromFirebase(cred.user.uid);
+        window.showScreen('gardenScreen');
+      } catch(e) { alert("Error: " + e.message); }
+    };
+
+    window.handleLogout = async () => {
+      try {
+        await signOut(auth);
+        document.getElementById('canvasWorkspace').innerHTML = '';
+        document.getElementById('emailInput').value = '';
+        document.getElementById('passInput').value = '';
+        document.getElementById('passConfirmInput').value = '';
+        window.setAuthMode('login');
+        window.showScreen('landingScreen');
+      } catch(e) { alert("Logout failed: " + e.message); }
+    };
+
+    window.saveGardenToFirebase = async (silent = false) => {
+      const user = auth.currentUser;
+      if (user) {
+        const vegDataMap = {};
+        document.querySelectorAll('.garden-veg-container').forEach(el => {
+          const id = el.dataset.id;
+          if (id) {
+            vegDataMap[id] = {
+              plantedDate: el.dataset.plantedDate || "",
+              growDays: el.dataset.growDays || "",
+              type: el.dataset.type || ""
+            };
+          }
+        });
+
+        // Clean UI indicators before saving HTML string
+        const workspace = document.getElementById('canvasWorkspace');
+        const containers = workspace.querySelectorAll('.is-selected');
+        containers.forEach(c => c.classList.remove('is-selected'));
+
+        await setDoc(doc(db, "gardens", user.uid), { 
+          content: workspace.innerHTML,
+          vegetablesData: vegDataMap
+        });
+        if (!silent) alert(window.getI18n('alertSaved'));
+      }
+    };
+
+    window.loadGardenFromFirebase = async (uid) => {
+      const docSnap = await getDoc(doc(db, "gardens", uid));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const workspace = document.getElementById('canvasWorkspace');
+        workspace.innerHTML = data.content;
+        
+        const vegDataMap = data.vegetablesData || {};
+        
+        // Restore elements and re-attach listeners
+        workspace.querySelectorAll('.garden-veg-container').forEach(el => {
+          const id = el.dataset.id;
+          if (id && vegDataMap[id]) {
+            el.dataset.plantedDate = vegDataMap[id].plantedDate || "";
+            el.dataset.growDays = vegDataMap[id].growDays || "";
+          }
+          window.makeVegInteractive(el);
+          // Re-render veg label for current language
+          const type = el.dataset.type;
+          const labelSpan = el.querySelector('span');
+          if (labelSpan && type) {
+            labelSpan.innerText = window.getI18n(type);
+          }
+        });
+        
+        workspace.querySelectorAll('.garden-line-container').forEach(c => {
+          window.makeLineInteractive(c, c.querySelector('.garden-line'));
+        });
+      }
+    };
+  </script>
+<!-- END: Firebase & Auth Logic -->
+<!-- BEGIN: Translation Data & Logic -->
+<script>
+  const translations = {
+    en: {
+      login: "Login",
+      register: "Register",
+      emailPlaceholder: "Email address",
+      passPlaceholder: "Password",
+      confirmPassPlaceholder: "Confirm password",
+      noAccount: "No account? Register here",
+      createAccount: "Create Account",
+      backToLogin: "Back to Login",
+      logout: "LOG OUT",
+      gardenTitle: "My Garden",
+      viewGarden: "View Garden",
+      buildGarden: "Build/change your Garden",
+      vegLibrary: "Vegetables Library",
+      settings: "Settings",
+      addLine: "Add Line",
+      addPlant: "Add Plant",
+      remove: "Remove",
+      save: "SAVE",
+      cancel: "CANCEL",
+      vegetableInfo: "Vegetable Info",
+      plantedDate: "Planted date",
+      growDays: "Grow days",
+      estHarvest: "Estimated harvest",
+      autoCalc: "Automatic calculation",
+      back: "Back",
+      saveChanges: "Save changes",
+      menu: "Menu",
+      language: "Language",
+      english: "English",
+      dutch: "Dutch",
+      zoom: "Zoom",
+      alertFillEmail: "Please fill in email and password.",
+      alertPassMismatch: "Passwords do not match.",
+      alertSaved: "Garden saved!",
+      feedback: "Feedback",
+      sunlight: "Sunlight",
+      watering: "Watering",
+      illnesses: "Common Illnesses",
+      calendar: "Planting Calendar",
+      greenhouse: "Kas",
+      outside: "Buiten",
+      atHome: "Binnen",
+      jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec",
+      // Veg Names
+      lettuce: "Lettuce", carrot: "Carrot", tomato: "Tomato", beans: "Beans", beet: "Beet", onion: "Onion", aubergine: "Aubergine", cucumber: "Cucumber", pepper: "Pepper", courgette: "Courgette", cauliflower: "Cauliflower", broccoli: "Broccoli", "red-cabbage": "Red Cabbage", garlic: "Garlic", arugula: "Arugula", potato: "Potato", corn: "Corn", mint: "Mint", dill: "Dill", thyme: "Thyme", chives: "Chives", basil: "Basil",
+      // Veg Info
+      "Partial Shade": "Partial Shade", "Full Sun": "Full Sun", "Daily": "Daily", "2-3 times/week": "2-3 times/week", "Regularly": "Regularly", "Moderate": "Moderate", "Low": "Low", "High": "High"
+    },
+    nl: {
+      login: "Inloggen",
+      register: "Registreren",
+      emailPlaceholder: "E-mailadres",
+      passPlaceholder: "Wachtwoord",
+      confirmPassPlaceholder: "Bevestig wachtwoord",
+      noAccount: "Nog geen account? Registreer hier",
+      createAccount: "Maak Account Aan",
+      backToLogin: "Terug naar Login",
+      logout: "UITLOGGEN",
+      gardenTitle: "Mijn Tuin",
+      viewGarden: "Bekijk Tuin",
+      buildGarden: "Bouw/wijzig je Tuin",
+      vegLibrary: "Groenten Bibliotheek",
+      settings: "Instellingen",
+      addLine: "Lijn Toevoegen",
+      addPlant: "Plant Toevoegen",
+      remove: "Verwijderen",
+      save: "OPSLAAN",
+      cancel: "ANNULEREN",
+      vegetableInfo: "Groente Info",
+      plantedDate: "Plantdatum",
+      growDays: "Groeidagen",
+      estHarvest: "Verwachte oogst",
+      autoCalc: "Automatische berekening",
+      back: "Terug",
+      saveChanges: "Wijzigingen opslaan",
+      menu: "Menu",
+      language: "Taal",
+      english: "Engels",
+      dutch: "Nederlands",
+      zoom: "Zoom",
+      alertFillEmail: "Vul aub e-mail en wachtwoord in.",
+      alertPassMismatch: "Wachtwoorden komen niet overeen.",
+      alertSaved: "Tuin opgeslagen!",
+      feedback: "Feedback",
+      sunlight: "Zonlicht",
+      watering: "Water geven",
+      illnesses: "Ziekten",
+      calendar: "Plantkalender",
+      greenhouse: "Kas",
+      outside: "Buiten",
+      atHome: "Binnen",
+      jan: "Jan", feb: "Feb", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
+      // Veg Names
+      lettuce: "Sla", carrot: "Wortel", tomato: "Tomaat", beans: "Bonen", beet: "Biet", onion: "Ui", aubergine: "Aubergine", cucumber: "Komkommer", pepper: "Paprika", courgette: "Courgette", cauliflower: "Bloemkool", broccoli: "Broccoli", "red-cabbage": "Rode Kool", garlic: "Knoflook", arugula: "Rucola", potato: "Aardappel", corn: "Maïs", mint: "Munt", dill: "Dille", thyme: "Tijm", chives: "Bieslook", basil: "Basilicum",
+      // Veg Info
+      "Partial Shade": "Halfschaduw", "Full Sun": "Volle zon", "Daily": "Dagelijks", "2-3 keer/week": "2-3 keer/week", "Regularly": "Regelmatig", "Moderate": "Gemiddeld", "Low": "Laag", "High": "Veel"
+    }
+  };
+
+  let currentLang = localStorage.getItem('appLang') || 'en';
+
+  window.setLanguage = function(lang) {
+    currentLang = lang;
+    localStorage.setItem('appLang', lang);
+    document.documentElement.lang = lang;
+    updateUI();
+  };
+
+  window.getI18n = function(key) {
+    if (!key) return "";
+    return translations[currentLang][key] || key;
+  };
+
+  function updateUI() {
+    // Universal i18n tag update
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      if (el.tagName === 'INPUT') {
+        el.placeholder = getI18n(key);
+      } else {
+        el.innerText = getI18n(key);
+      }
+    });
+
+    // Specific logic for complex elements
+    const gTitle = document.getElementById('gardenTitle');
+    if(gTitle.getAttribute('data-key')) gTitle.innerText = getI18n(gTitle.getAttribute('data-key'));
+
+    const zBadge = document.getElementById('zoomBadge');
+    const currentScale = window.scale || 1;
+    zBadge.innerText = `${getI18n('zoom')}: ${Math.round(currentScale * 100)}%`;
+
+    // Update canvas vegetables text
+    document.querySelectorAll('.garden-veg-container').forEach(el => {
+      const type = el.dataset.type;
+      const labelSpan = el.querySelector('span');
+      if (labelSpan && type) {
+        labelSpan.innerText = getI18n(type);
+      }
+    });
+
+    // Settings screen buttons state
+    document.getElementById('btnEng').className = currentLang === 'en' ? "bg-bladgroen text-black font-bold py-3 rounded-xl" : "bg-neutral-900 text-white py-3 rounded-xl border border-neutral-800";
+    document.getElementById('btnNed').className = currentLang === 'nl' ? "bg-bladgroen text-black font-bold py-3 rounded-xl" : "bg-neutral-900 text-white py-3 rounded-xl border border-neutral-800";
+
+    // Re-populate dynamic parts
+    if(!document.getElementById('libraryScreen').classList.contains('hidden')) {
+        window.populateLibrary();
+    }
+    if(!document.getElementById('vegSubMenu').classList.contains('hidden')) {
+        window.populateVegMenu();
+    }
+    
+    // Refresh harvest calculation display
+    if(!document.getElementById('vegDetailScreen').classList.contains('hidden')) {
+        window.calculateHarvestDate();
+    }
+  }
+</script>
+<!-- END: Translation Data & Logic -->
+<!-- BEGIN: Landing/Login Screen -->
+<div class="screen fixed inset-0 flex flex-col items-center justify-center p-6 z-50 bg-black" id="landingScreen">
+<div class="w-full max-sm flex flex-col items-center">
+<div class="mb-12 flex flex-col items-center">
+<svg class="w-16 h-16 fill-bladgroen mb-4" viewbox="0 0 24 24">
+<path d="M17,8C8,10 5.9,16.17 3.82,21.34C5.71,20 10.8,17.22 17,16.5V21H19V14.5C21,14 22,11.5 22,9C22,4.5 17.5,2 17.5,2C17.5,2 14,5.5 14,8H17M15.3,11.4C13.43,12.06 11.05,13.1 8.53,14.65C10.74,13.62 13.06,12.8 15,12.33C15.1,12.03 15.2,11.72 15.3,11.4Z"></path>
+</svg>
+<h1 class="text-4xl font-bold text-bladgroen">MyVeggie App</h1>
+</div>
+<div class="w-full space-y-4">
+<input class="w-full bg-neutral-900 text-white p-4 rounded-xl border border-neutral-800 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="emailPlaceholder" id="emailInput" placeholder="Email address" type="email"/>
+<input class="w-full bg-neutral-900 text-white p-4 rounded-xl border border-neutral-800 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="passPlaceholder" id="passInput" placeholder="Password" type="password"/>
+<div class="hidden" id="registerFieldContainer">
+<input class="w-full bg-neutral-900 text-white p-4 rounded-xl border border-neutral-800 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="confirmPassPlaceholder" id="passConfirmInput" placeholder="Confirm password" type="password"/>
+</div>
+<div class="pt-4 space-y-3" id="authActions">
+<div class="flex flex-col space-y-3" id="loginModeActions">
+<button class="w-full bg-white text-black font-bold py-4 px-4 rounded-xl text-lg hover:bg-gray-200 transition-colors" data-i18n="login" onclick="handleAuth('login')">Login</button>
+<button class="w-full bg-transparent text-gray-400 font-medium py-2 text-sm hover:text-white transition-colors" data-i18n="noAccount" onclick="setAuthMode('register')">No account? Register here</button>
+</div>
+<div class="hidden flex flex-col space-y-3" id="registerModeActions">
+<button class="w-full bg-bladgroen text-white font-bold py-4 px-4 rounded-xl text-lg hover:brightness-110 transition-colors" data-i18n="createAccount" onclick="handleAuth('register')">Create Account</button>
+<button class="w-full bg-transparent text-gray-400 font-medium py-2 text-sm hover:text-white transition-colors" data-i18n="backToLogin" onclick="setAuthMode('login')">Back to Login</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- END: Landing/Login Screen -->
+<!-- BEGIN: Garden Screen -->
+<div class="screen hidden fixed inset-0 bg-black flex flex-col p-4 pb-[15vh]" id="gardenScreen">
+<div class="flex items-center justify-between w-full border-b border-neutral-800 pb-4 z-10">
+<button class="p-2 text-white focus:outline-none" data-purpose="menu-toggle" onclick="toggleMenu(true)">
+<svg class="w-8 h-8 stroke-white" fill="none" stroke-width="2" viewbox="0 0 24 24">
+<line x1="4" x2="20" y1="6" y2="6"></line>
+<line x1="4" x2="20" y1="12" y2="12"></line>
+<line x1="4" x2="20" y1="18" y2="18"></line>
+</svg>
+</button>
+<h2 class="text-xl font-bold text-white flex-1 text-center" data-key="gardenTitle" id="gardenTitle">My Garden</h2>
+<button class="text-xs font-bold px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-bladgroen active:bg-neutral-800 transition-colors" data-i18n="logout" onclick="handleLogout()">LOG OUT</button>
+</div>
+<div class="flex-1 relative overflow-hidden bg-neutral-950 rounded-2xl border border-neutral-900 shadow-inner mt-4" id="canvasContainer">
+<div id="canvasWorkspace" style="transform: translate(-50%, -50%) scale(1);"></div>
+<div class="hidden absolute bottom-4 right-4 bg-neutral-900/90 text-[10px] px-2 py-1 rounded border border-neutral-800 text-gray-400" id="zoomBadge">Zoom: 100%</div>
+</div>
+<div class="hidden bg-neutral-900 border border-neutral-800 rounded-2xl p-4 mb-4 overflow-y-auto grid grid-cols-4 gap-3 z-10 h-72" id="vegSubMenu"></div>
+<div class="hidden flex flex-col gap-3 z-10" id="buildControls">
+<div class="grid grid-cols-3 gap-2">
+<button class="bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider" data-i18n="addLine" id="addBtn" onclick="setMode('add')">Add Line</button>
+<button class="bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider" data-i18n="addPlant" id="addVegBtn" onclick="setMode('veg-menu')">Add Plant</button>
+<button class="bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider" data-i18n="remove" id="removeBtn" onclick="setMode('remove')">Remove</button>
+</div>
+<div class="grid grid-cols-2 gap-3">
+<button class="bg-bladgroen text-black font-bold py-4 rounded-xl text-sm shadow-lg shadow-bladgroen/20" data-i18n="save" onclick="saveGarden()">SAVE</button>
+<button class="bg-red-600/20 border border-red-600/50 text-red-500 font-bold py-4 rounded-xl text-sm" data-i18n="cancel" onclick="cancelBuild()">CANCEL</button>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 w-full h-[12.5vh] bg-neutral-900 border-t border-neutral-800 flex items-center justify-center z-[60]"><span class="text-gray-500 text-xs font-medium uppercase tracking-widest">Google Ad Placeholder</span></div></div>
+<!-- END: Garden Screen -->
+<!-- BEGIN: Settings Screen -->
+<div class="screen hidden fixed inset-0 bg-black flex flex-col p-6 z-[80] justify-between items-center" id="settingsScreen">
+<div class="w-full max-w-sm flex flex-col">
+<div class="flex items-center gap-4 border-b border-neutral-800 pb-6 mb-8">
+<h2 class="text-3xl font-bold text-white" data-i18n="settings" id="settingsTitle">Settings</h2>
+</div>
+<div class="space-y-8">
+<div>
+<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4" data-i18n="language" id="langLabel">Language</label>
+<div class="grid grid-cols-2 gap-4">
+<button class="bg-bladgroen text-black font-bold py-3 rounded-xl" data-i18n="english" id="btnEng" onclick="setLanguage('en')">English</button>
+<button class="bg-neutral-900 text-white py-3 rounded-xl border border-neutral-800" data-i18n="dutch" id="btnNed" onclick="setLanguage('nl')">Dutch</button>
+</div>
+</div>
+<div>
+<button class="w-full bg-neutral-900 text-bladgroen font-bold py-4 rounded-xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="feedback" id="btnFeedback" onclick="sendFeedback()">Feedback</button>
+</div>
+</div>
+</div>
+<div class="w-full max-w-sm mt-8">
+<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-800" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
+</div>
+</div>
+<!-- END: Settings Screen -->
+<!-- BEGIN: Vegetable Library Screen -->
+<div class="screen hidden fixed inset-0 bg-black flex flex-col p-4 z-[85]" id="libraryScreen">
+<div class="flex items-center gap-4 border-b border-neutral-800 pb-4 mb-4">
+<h2 class="text-2xl font-bold text-white" data-i18n="vegLibrary" id="libraryTitle">Vegetables Library</h2>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1" id="libraryList">
+<!-- Library items will be injected here as accordions -->
+</div>
+<div class="mt-4">
+<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-800" data-i18n="back" id="libraryBackBtn" onclick="showScreen('gardenScreen')">Back</button>
+</div>
+</div>
+<!-- END: Vegetable Library Screen -->
+<!-- BEGIN: Vegetable Detail Screen -->
+<div class="screen hidden fixed inset-0 bg-black flex flex-col p-6 z-[60] justify-between items-center" id="vegDetailScreen">
+<div class="w-full max-w-sm flex flex-col">
+<div class="flex items-center gap-4 border-b border-neutral-800 pb-6 mb-8">
+<div class="bg-neutral-900 p-3 rounded-2xl border border-neutral-800" id="detailVegIcon"></div>
+<h2 class="text-3xl font-bold text-white" data-i18n="vegetableInfo" id="detailVegTitle">Vegetable Info</h2>
+</div>
+<div class="space-y-6">
+<div>
+<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2" data-i18n="plantedDate" for="inputPlantedDate">Planted date</label>
+<input class="w-full bg-neutral-900 border border-neutral-800 rounded-xl py-4 px-4 text-white focus:border-bladgroen outline-none" id="inputPlantedDate" oninput="calculateHarvestDate()" type="date"/>
+</div>
+<div>
+<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2" data-i18n="growDays" for="inputGrowDays">Grow days</label>
+<input class="w-full bg-neutral-900 border border-neutral-800 rounded-xl py-4 px-4 text-white focus:border-bladgroen outline-none" id="inputGrowDays" min="0" oninput="calculateHarvestDate()" placeholder="e.g. 60" type="number"/>
+</div>
+<div>
+<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2" data-i18n="estHarvest" for="outputHarvestDate">Estimated harvest</label>
+<input class="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-4 px-4 text-bladgroen font-bold focus:outline-none" data-i18n="autoCalc" id="outputHarvestDate" placeholder="Automatic calculation" readonly="" type="text"/>
+</div>
+</div>
+</div>
+<div class="w-full max-w-sm grid grid-cols-2 gap-4 mt-8">
+<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-800" data-i18n="back" onclick="closeVegDetails()">Back</button>
+<button class="w-full bg-bladgroen text-black font-bold py-4 rounded-xl" data-i18n="saveChanges" onclick="saveVegDetails()">Save changes</button>
+</div>
+</div>
+<!-- END: Vegetable Detail Screen -->
+<!-- BEGIN: Hamburger Menu Overlay -->
+<div class="hidden fixed inset-0 bg-black/95 z-[70] flex flex-col p-6" id="hamburgerMenu">
+<div class="flex justify-between items-center border-b border-neutral-800 pb-6 mb-8">
+<h3 class="text-2xl font-bold text-bladgroen" data-i18n="menu">Menu</h3>
+<button class="p-2 text-white text-3xl" onclick="toggleMenu(false)">×</button>
+</div>
+<div class="flex flex-col space-y-3">
+<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="viewGarden" id="menuViewGarden" onclick="selectMenuOption('viewGarden')">View Garden</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="buildGarden" id="menuBuildGarden" onclick="selectMenuOption('buildGarden')">Build/change your Garden</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="vegLibrary" id="menuVegLibrary" onclick="selectMenuOption('vegLibrary')">Vegetables Library</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="settings" id="menuSettings" onclick="selectMenuOption('settings')">Settings</button>
+</div>
+</div>
+<!-- END: Hamburger Menu Overlay -->
+<!-- BEGIN: Vegetable SVG Templates -->
+<div class="hidden" id="veg-templates">
+<div id="tmpl-lettuce"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M220 180C140 160 100 240 120 320C140 400 220 420 280 390C340 360 400 300 380 220Z" fill="#4CAF50"></path><path d="M180 120C260 80 320 120 360 180" fill="none" stroke="#81C784" stroke-width="12"></path></svg></div>
+<div id="tmpl-carrot"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M150 400L340 210C370 180 370 130 340 100L40 290Z" fill="#FF9800"></path><path d="M340 140L390 90" fill="none" stroke="#4CAF50" stroke-width="16"></path></svg></div>
+<div id="tmpl-tomato"><svg height="40" viewbox="0 0 512 512" width="40"><circle cx="256" cy="276" fill="#F44336" r="160"></circle><path d="M256 116L210 80L256 126Z" fill="#4CAF50"></path></svg></div>
+<div id="tmpl-beans"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M120 120Q200 80 380 380Q240 320 120 120Z" fill="#2E7D32"></path><circle cx="200" cy="190" fill="#81C784" r="22"></circle></svg></div>
+<div id="tmpl-beet"><svg height="40" viewbox="0 0 512 512" width="40"><circle cx="256" cy="300" fill="#880E4F" r="130"></circle><path d="M256 170Q220 50 210 40Z" fill="#4CAF50"></path></svg></div>
+<div id="tmpl-onion"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 120C160 220 140 380 256 400C372 380 352 220 256 120Z" fill="#A1887F"></path></svg></div>
+<div id="tmpl-aubergine"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M200 150Q160 300 240 420Q340 420 320 250Z" fill="#4A148C"></path></svg></div>
+<div id="tmpl-cucumber"><svg height="40" viewbox="0 0 512 512" width="40"><rect fill="#1B5E20" height="100" rx="50" transform="rotate(-30 260 250)" width="220" x="150" y="200"></rect></svg></div>
+<div id="tmpl-pepper"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M180 160C140 200 140 360 256 400C372 360 372 200 332 160Z" fill="#FFB300"></path></svg></div>
+<div id="tmpl-courgette"><svg height="40" viewbox="0 0 512 512" width="40"><rect fill="#2E7D32" height="90" rx="45" transform="rotate(-15 260 255)" width="240" x="140" y="210"></rect></svg></div>
+<div id="tmpl-cauliflower"><svg height="40" viewbox="0 0 512 512" width="40"><circle cx="256" cy="270" fill="#E0E0E0" r="100"></circle><path d="M140 270Q180 160 256 200Z" fill="#4CAF50"></path></svg></div>
+<div id="tmpl-broccoli"><svg height="40" viewbox="0 0 512 512" width="40"><circle cx="210" cy="220" fill="#2E7D32" r="70"></circle><circle cx="302" cy="220" fill="#2E7D32" r="70"></circle><circle cx="256" cy="160" fill="#4CAF50" r="75"></circle><path d="M256 260V380" fill="none" stroke="#81C784" stroke-width="24"></path></svg></div>
+<div id="tmpl-red-cabbage"><svg height="40" viewbox="0 0 512 512" width="40"><circle cx="256" cy="256" fill="#6A1B9A" r="150"></circle><path d="M256 106C200 106 156 150 156 206" fill="none" stroke="#BA68C8" stroke-width="15"></path></svg></div>
+<div id="tmpl-garlic"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 150C180 150 140 280 256 400C372 280 332 150 256 150Z" fill="#F5F5F5"></path><path d="M256 150V100" fill="none" stroke="#4CAF50" stroke-width="12"></path></svg></div>
+<div id="tmpl-arugula"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 400L220 150Q256 100 292 150Z" fill="#388E3C"></path></svg></div>
+<div id="tmpl-potato"><svg height="40" viewbox="0 0 512 512" width="40"><ellipse cx="256" cy="256" fill="#8D6E63" rx="140" ry="100"></ellipse><circle cx="220" cy="240" fill="#6D4C41" r="5"></circle><circle cx="300" cy="280" fill="#6D4C41" r="5"></circle></svg></div>
+<div id="tmpl-corn"><svg height="40" viewbox="0 0 512 512" width="40"><rect fill="#FFEB3B" height="180" rx="40" width="80" x="216" y="160"></rect><path d="M216 340Q160 280 216 160" fill="#4CAF50"></path></svg></div>
+<div id="tmpl-mint"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 400L220 300Q140 280 160 180Q256 150 352 180Q372 280 292 300Z" fill="#00E676"></path></svg></div>
+<div id="tmpl-dill"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 400V150M256 300L200 250M256 250L312 200" fill="none" stroke="#4CAF50" stroke-width="10"></path></svg></div>
+<div id="tmpl-thyme"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 400Q280 250 256 150" fill="none" stroke="#2E7D32" stroke-width="8"></path><circle cx="256" cy="200" fill="#4CAF50" r="10"></circle></svg></div>
+<div id="tmpl-chives"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M240 400L245 100M260 400L255 100M280 400L265 100" fill="none" stroke="#81C784" stroke-width="5"></path></svg></div>
+<div id="tmpl-basil"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 400L210 280Q120 280 140 180Q256 140 372 180Q392 280 302 280Z" fill="#1B5E20"></path></svg></div>
+</div>
+<!-- END: Vegetable SVG Templates -->
+<!-- BEGIN: Application Scripts -->
+<script data-purpose="app-logic">
+    window.scale = 1;
+    let startDist = 0;
+    let activeMode = 'drag'; 
+    let selectedVegType = null;
+    let isBuildingModeActive = false;
+    let currentSelectedElement = null; 
+    let currentTargetVegElement = null; 
+    let gardenBackup = '';
+
+    const vegLibraryData = [
+      { id: 'lettuce', nameKey: 'lettuce', growTime: 45, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs, Downy Mildew', calendar: { greenhouse: [2,3], outside: [4,5,6,7,8], home: [1,2] } },
+      { id: 'carrot', nameKey: 'carrot', growTime: 75, sun: 'Full Sun', water: '2-3 times/week', illnesses: 'Carrot Fly, Root Rot', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [2,3] } },
+      { id: 'tomato', nameKey: 'tomato', growTime: 80, sun: 'Full Sun', water: 'Daily', illnesses: 'Blight, Blossom End Rot', calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] } },
+      { id: 'beans', nameKey: 'beans', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids, Bean Rust', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
+      { id: 'beet', nameKey: 'beet', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot, Beet Fly', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [3] } },
+      { id: 'onion', nameKey: 'onion', growTime: 120, sun: 'Full Sun', water: 'Low', illnesses: 'Downy Mildew, Onion Fly', calendar: { greenhouse: [2,3], outside: [3,4], home: [1,2] } },
+      { id: 'aubergine', nameKey: 'aubergine', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Spider Mites, Verticillium Wilt', calendar: { greenhouse: [2,3], outside: [6], home: [1,2] } },
+      { id: 'cucumber', nameKey: 'cucumber', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Powdery Mildew, Mosaic Virus', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
+      { id: 'pepper', nameKey: 'pepper', growTime: 85, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids, Leaf Spot', calendar: { greenhouse: [2,3,4], outside: [6], home: [1,2,3] } },
+      { id: 'courgette', nameKey: 'courgette', growTime: 55, sun: 'Full Sun', water: 'High', illnesses: 'Powdery Mildew, Slugs', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
+      { id: 'cauliflower', nameKey: 'cauliflower', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Cabbage White', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
+      { id: 'broccoli', nameKey: 'broccoli', growTime: 80, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Aphids', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
+      { id: 'red-cabbage', nameKey: 'red-cabbage', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Cabbage Loopers', calendar: { greenhouse: [3], outside: [4,5,6], home: [2] } },
+      { id: 'garlic', nameKey: 'garlic', growTime: 240, sun: 'Full Sun', water: 'Low', illnesses: 'Rust, White Rot', calendar: { greenhouse: [], outside: [10,11], home: [] } },
+      { id: 'arugula', nameKey: 'arugula', growTime: 30, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', calendar: { greenhouse: [2,3,9,10], outside: [4,5,6,7,8], home: [1,11,12] } },
+      { id: 'potato', nameKey: 'potato', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Blight, Scab', calendar: { greenhouse: [], outside: [3,4,5], home: [] } },
+      { id: 'corn', nameKey: 'corn', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Smut, Earworm', calendar: { greenhouse: [4], outside: [5,6], home: [] } },
+      { id: 'mint', nameKey: 'mint', growTime: 60, sun: 'Partial Shade', water: 'High', illnesses: 'Rust', calendar: { greenhouse: [3], outside: [4,5,6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
+      { id: 'dill', nameKey: 'dill', growTime: 40, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', calendar: { greenhouse: [3], outside: [4,5,6,7], home: [3,4] } },
+      { id: 'thyme', nameKey: 'thyme', growTime: 90, sun: 'Full Sun', water: 'Low', illnesses: 'Root Rot', calendar: { greenhouse: [3], outside: [4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
+      { id: 'chives', nameKey: 'chives', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', calendar: { greenhouse: [2,3], outside: [3,4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
+      { id: 'basil', nameKey: 'basil', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Fusarium Wilt, Slugs', calendar: { greenhouse: [4,5], outside: [6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } }
+    ];
+
+    const workspace = document.getElementById('canvasWorkspace');
+    const container = document.getElementById('canvasContainer');
+
+    window.showScreen = function(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+      document.getElementById(screenId).classList.remove('hidden');
+      if(screenId !== 'vegDetailScreen' && screenId !== 'gardenScreen' && screenId !== 'settingsScreen' && screenId !== 'libraryScreen') lockGarden();
+      if(screenId === 'libraryScreen') window.populateLibrary();
+      if(screenId === 'gardenScreen') updateUI();
+    };
+
+    window.setAuthMode = function(mode) {
+      const regField = document.getElementById('registerFieldContainer');
+      const loginActions = document.getElementById('loginModeActions');
+      const registerActions = document.getElementById('registerModeActions');
+      
+      if(mode === 'register') {
+        regField.classList.remove('hidden');
+        loginActions.classList.add('hidden');
+        registerActions.classList.remove('hidden');
+      } else {
+        regField.classList.add('hidden');
+        loginActions.classList.remove('hidden');
+        registerActions.classList.add('hidden');
+      }
+    };
+
+    window.toggleMenu = function(open) {
+      const menu = document.getElementById('hamburgerMenu');
+      if (open) menu.classList.remove('hidden');
+      else menu.classList.add('hidden');
+    };
+
+    window.selectMenuOption = function(key) {
+      toggleMenu(false);
+      if(key === 'settings') {
+          showScreen('settingsScreen');
+          return;
+      }
+      if(key === 'vegLibrary') {
+          showScreen('libraryScreen');
+          return;
+      }
+      
+      const gTitle = document.getElementById('gardenTitle');
+      gTitle.setAttribute('data-key', key);
+      gTitle.innerText = window.getI18n(key);
+
+      if (key === 'buildGarden') unlockGarden();
+      else lockGarden();
+    };
+
+    window.sendFeedback = function() {
+      const email = 'MyVeggie@hotmail.com';
+      const subject = encodeURIComponent('Feedback for MyVeggie App');
+      window.location.href = `mailto:${email}?subject=${subject}`;
+    };
+
+    function lockGarden() {
+      isBuildingModeActive = false;
+      container.classList.remove('is-building');
+      document.getElementById('buildControls').classList.add('hidden');
+      document.getElementById('zoomBadge').classList.add('hidden');
+      document.getElementById('vegSubMenu').classList.add('hidden');
+      clearSelection();
+      setMode('drag');
+    }
+
+    function unlockGarden() {
+      isBuildingModeActive = true;
+      container.classList.add('is-building');
+      document.getElementById('buildControls').classList.remove('hidden');
+      document.getElementById('zoomBadge').classList.remove('hidden');
+      gardenBackup = workspace.innerHTML;
+      setMode('drag');
+      initTouchZoomAndPlacement();
+      window.populateVegMenu();
+    }
+
+    function setMode(mode) {
+      activeMode = mode;
+      document.getElementById('vegSubMenu').classList.add('hidden');
+      
+      ['addBtn', 'addVegBtn', 'removeBtn'].forEach(id => {
+        const btn = document.getElementById(id);
+        if(btn) btn.className = "bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider transition-all";
+      });
+
+      if (mode === 'add') {
+        document.getElementById('addBtn').classList.replace('bg-neutral-900', 'bg-green-700');
+      } else if (mode === 'veg-menu') {
+        document.getElementById('addVegBtn').classList.replace('bg-neutral-900', 'bg-green-700');
+        document.getElementById('vegSubMenu').classList.remove('hidden');
+      } else if (mode === 'remove') {
+        document.getElementById('removeBtn').classList.replace('bg-neutral-900', 'bg-red-700');
+        clearSelection();
+      }
+    }
+
+    window.populateVegMenu = function() {
+      const menu = document.getElementById('vegSubMenu');
+      menu.innerHTML = '';
+      vegLibraryData.forEach(veg => {
+        const btn = document.createElement('button');
+        btn.onclick = () => selectVeg(veg.id);
+        btn.className = "flex flex-col items-center gap-1 p-3 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-bladgroen transition-colors";
+        const label = window.getI18n(veg.id);
+        btn.innerHTML = `${document.getElementById('tmpl-'+veg.id).innerHTML}<span class="text-[9px] truncate w-full text-center text-gray-400 font-medium">${label}</span>`;
+        menu.appendChild(btn);
+      });
+    };
+
+    window.populateLibrary = function() {
+      const list = document.getElementById('libraryList');
+      list.innerHTML = '';
+      const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+      
+      const sortedData = [...vegLibraryData].sort((a, b) => {
+        return window.getI18n(a.id).localeCompare(window.getI18n(b.id));
+      });
+
+      sortedData.forEach(veg => {
+        const accordionItem = document.createElement('div');
+        accordionItem.className = "library-accordion-item bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden mb-3";
+        
+        const renderRow = (label, value) => `
+          <div class="flex justify-between items-center text-base py-1">
+            <span class="text-gray-400 font-medium">${window.getI18n(label)}</span>
+            <span class="text-white font-bold">${window.getI18n(value)}</span>
+          </div>
+        `;
+
+        const renderCalRow = (labelKey, activeMonths) => {
+            let cells = '';
+            months.forEach((m, i) => {
+                const isActive = activeMonths.includes(i+1);
+                cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${isActive ? 'bg-bladgroen' : 'bg-neutral-800'}"></div>`;
+            });
+            
+            let labels = '';
+            months.forEach((m, i) => {
+                labels += `<div class="w-full text-center text-[10px] font-bold text-gray-500 uppercase tracking-tighter">${window.getI18n(m)}</div>`;
+            });
+
+            return `
+              <div class="space-y-1.5 mb-4">
+                <span class="text-sm text-gray-300 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span>
+                <div class="grid grid-cols-12 gap-1 mb-1">${cells}</div>
+                <div class="grid grid-cols-12 gap-1">${labels}</div>
+              </div>
+            `;
+        };
+
+        accordionItem.innerHTML = `
+          <button class="w-full flex items-center justify-between p-5 focus:outline-none bg-neutral-900 active:bg-neutral-800 transition-colors" onclick="this.parentElement.classList.toggle('active')">
+            <div class="flex items-center gap-4">
+              <div class="bg-neutral-800 p-1.5 rounded-lg border border-neutral-700 scale-90">${document.getElementById('tmpl-'+veg.id).innerHTML}</div>
+              <h3 class="text-xl font-bold text-bladgroen">${window.getI18n(veg.id)}</h3>
+            </div>
+            <svg class="chevron-icon w-6 h-6 stroke-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          <div class="library-accordion-content bg-neutral-950/40">
+            <div class="p-5 pt-2 space-y-5">
+              <div class="space-y-1 border-t border-neutral-800 pt-5">
+                ${renderRow('growDays', veg.growTime + ' days')}
+                ${renderRow('sunlight', veg.sun)}
+                ${renderRow('watering', veg.water)}
+                ${renderRow('illnesses', veg.illnesses)}
+              </div>
+              <div class="pt-3 border-t border-neutral-800 space-y-4">
+                <h4 class="text-sm font-bold text-bladgroen uppercase tracking-widest border-b border-bladgroen/20 pb-2">${window.getI18n('calendar')}</h4>
+                ${renderCalRow('greenhouse', veg.calendar.greenhouse)}
+                ${renderCalRow('outside', veg.calendar.outside)}
+                ${renderCalRow('atHome', veg.calendar.home)}
+              </div>
+            </div>
+          </div>
+        `;
+        list.appendChild(accordionItem);
+      });
+    };
+
+    function selectVeg(vegType) {
+      selectedVegType = vegType;
+      activeMode = 'add-veg';
+      document.getElementById('vegSubMenu').classList.add('hidden');
+      document.getElementById('addVegBtn').className = "bg-green-900 text-green-300 font-bold py-4 rounded-xl text-[10px] border border-green-600 uppercase tracking-wider";
+      clearSelection();
+    }
+
+    function clearSelection() {
+      if (currentSelectedElement) {
+        currentSelectedElement.classList.remove('is-selected');
+        currentSelectedElement = null;
+      }
+    }
+
+    function handleCanvasClick(clientX, clientY, eventTarget) {
+      if (!isBuildingModeActive) return;
+      if (eventTarget.closest('.garden-veg-container') || eventTarget.closest('.garden-line-container')) return;
+      if (currentSelectedElement) { clearSelection(); setMode('drag'); return; }
+
+      if (activeMode === 'add') placeLineAt(clientX, clientY);
+      else if (activeMode === 'add-veg' && selectedVegType) placeVegAt(clientX, clientY, selectedVegType);
+    }
+
+    function placeLineAt(clientX, clientY) {
+      const rect = workspace.getBoundingClientRect();
+      const x = (clientX - rect.left) / window.scale;
+      const y = (clientY - rect.top) / window.scale;
+
+      const containerDiv = document.createElement('div');
+      containerDiv.className = 'garden-line-container';
+      containerDiv.style.left = `${x}px`;
+      containerDiv.style.top = `${y - 20}px`;
+      containerDiv.dataset.rotation = 0;
+      containerDiv.dataset.width = 38;
+
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'garden-line';
+      lineDiv.style.width = '38px';
+
+      const handleDiv = document.createElement('div');
+      handleDiv.className = 'stretch-handle';
+
+      containerDiv.appendChild(lineDiv);
+      containerDiv.appendChild(handleDiv);
+      workspace.appendChild(containerDiv);
+
+      window.makeLineInteractive(containerDiv, lineDiv);
+      currentSelectedElement = containerDiv;
+      currentSelectedElement.classList.add('is-selected');
+    }
+
+    function placeVegAt(clientX, clientY, type) {
+      const rect = workspace.getBoundingClientRect();
+      const x = (clientX - rect.left) / window.scale;
+      const y = (clientY - rect.top) / window.scale;
+
+      const vegDiv = document.createElement('div');
+      vegDiv.className = 'garden-veg-container';
+      vegDiv.style.left = `${x - 30}px`;
+      vegDiv.style.top = `${y - 32}px`;
+      vegDiv.dataset.type = type;
+      vegDiv.dataset.id = "id-" + Date.now(); 
+
+      const vegData = vegLibraryData.find(v => v.id === type);
+      vegDiv.dataset.growDays = vegData ? vegData.growTime : "";
+
+      const svgTemplate = document.getElementById(`tmpl-${type}`).innerHTML;
+      const label = window.getI18n(type);
+      vegDiv.innerHTML = `${svgTemplate}<span class="text-[9px] text-gray-500 mt-0.5 font-medium pointer-events-none text-center truncate w-full">${label}</span>`;
+
+      workspace.appendChild(vegDiv);
+      window.makeVegInteractive(vegDiv);
+      currentSelectedElement = vegDiv;
+      currentSelectedElement.classList.add('is-selected');
+    }
+
+    window.openVegDetails = function(vegEl) {
+      currentTargetVegElement = vegEl;
+      const type = vegEl.dataset.type;
+      document.getElementById('detailVegTitle').innerText = window.getI18n('vegetableInfo');
+      document.getElementById('detailVegIcon').innerHTML = document.getElementById(`tmpl-${type}`).innerHTML;
+      document.getElementById('inputPlantedDate').value = vegEl.dataset.plantedDate || "";
+      document.getElementById('inputGrowDays').value = vegEl.dataset.growDays || "";
+      calculateHarvestDate();
+      showScreen('vegDetailScreen');
+    };
+
+    window.closeVegDetails = function() {
+      showScreen('gardenScreen');
+      currentTargetVegElement = null;
+    };
+
+    window.saveVegDetails = async function() {
+      if (currentTargetVegElement) {
+        currentTargetVegElement.dataset.plantedDate = document.getElementById('inputPlantedDate').value;
+        currentTargetVegElement.dataset.growDays = document.getElementById('inputGrowDays').value;
+        
+        // Ensure persistence immediately after detail change
+        if (window.saveGardenToFirebase) {
+          await window.saveGardenToFirebase(true);
+        }
+      }
+      closeVegDetails();
+    };
+
+    window.calculateHarvestDate = function() {
+      const pDate = document.getElementById('inputPlantedDate').value;
+      const gDays = parseInt(document.getElementById('inputGrowDays').value);
+      const out = document.getElementById('outputHarvestDate');
+      if (pDate && !isNaN(gDays)) {
+        const d = new Date(pDate);
+        d.setDate(d.getDate() + gDays);
+        out.value = d.toLocaleDateString(currentLang === 'nl' ? 'nl-NL' : 'en-GB');
+      } else {
+        out.value = "";
+      }
+    };
+
+    window.saveGarden = async function() {
+      if(window.saveGardenToFirebase) {
+        await window.saveGardenToFirebase();
+      }
+      const gTitle = document.getElementById('gardenTitle');
+      gTitle.setAttribute('data-key', 'viewGarden');
+      gTitle.innerText = window.getI18n('viewGarden');
+      lockGarden();
+    };
+
+    window.cancelBuild = function() {
+      if (gardenBackup) {
+        workspace.innerHTML = gardenBackup;
+        workspace.querySelectorAll('.garden-veg-container').forEach(el => window.makeVegInteractive(el));
+        workspace.querySelectorAll('.garden-line-container').forEach(c => window.makeLineInteractive(c, c.querySelector('.garden-line')));
+      }
+      const gTitle = document.getElementById('gardenTitle');
+      gTitle.setAttribute('data-key', 'viewGarden');
+      gTitle.innerText = window.getI18n('viewGarden');
+      lockGarden();
+    };
+
+    window.makeLineInteractive = function(containerEl, lineEl) {
+      let isDragging = false, isTransforming = false;
+      let startX, startY, startLeft, startTop, startAngle;
+
+      containerEl.onpointerdown = (e) => {
+        if (!isBuildingModeActive) return;
+        e.stopPropagation();
+        if (activeMode === 'remove') { containerEl.remove(); return; }
+        clearSelection();
+        currentSelectedElement = containerEl;
+        currentSelectedElement.classList.add('is-selected');
+
+        if (e.target.classList.contains('stretch-handle')) {
+          isTransforming = true;
+          const rect = containerEl.getBoundingClientRect();
+          startAngle = Math.atan2(e.clientY - rect.top, e.clientX - rect.left) - (parseInt(containerEl.dataset.rotation || 0) * Math.PI / 180);
+        } else {
+          isDragging = true;
+          startX = e.clientX; startY = e.clientY;
+          startLeft = parseInt(containerEl.style.left); startTop = parseInt(containerEl.style.top);
+        }
+        containerEl.setPointerCapture(e.pointerId);
+      };
+
+      containerEl.onpointermove = (e) => {
+        if (isDragging) {
+          containerEl.style.left = `${startLeft + (e.clientX - startX) / window.scale}px`;
+          containerEl.style.top = `${startTop + (e.clientY - startY) / window.scale}px`;
+        } else if (isTransforming) {
+          const rect = containerEl.getBoundingClientRect();
+          const angle = Math.atan2(e.clientY - rect.top, e.clientX - rect.left) - startAngle;
+          let deg = Math.round(angle * 180 / Math.PI);
+          containerEl.style.transform = `rotate(${deg}deg)`;
+          containerEl.dataset.rotation = deg;
+          const dist = Math.hypot(e.clientX - rect.left, e.clientY - rect.top) / window.scale;
+          lineEl.style.width = `${Math.max(15, dist)}px`;
+        }
+      };
+
+      containerEl.onpointerup = (e) => { isDragging = isTransforming = false; containerEl.releasePointerCapture(e.pointerId); };
+    };
+
+    window.makeVegInteractive = function(vegEl) {
+      let isDragging = false, moved = false, startX, startY, startLeft, startTop;
+
+      vegEl.onpointerdown = (e) => {
+        if (!isBuildingModeActive) return;
+        e.stopPropagation();
+        if (activeMode === 'remove') { vegEl.remove(); return; }
+        clearSelection();
+        currentSelectedElement = vegEl;
+        currentSelectedElement.classList.add('is-selected');
+        isDragging = true; moved = false;
+        startX = e.clientX; startY = e.clientY;
+        startLeft = parseInt(vegEl.style.left); startTop = parseInt(vegEl.style.top);
+        vegEl.setPointerCapture(e.pointerId);
+      };
+
+      vegEl.onpointermove = (e) => {
+        if (!isDragging) return;
+        const dx = (e.clientX - startX) / window.scale;
+        const dy = (e.clientY - startY) / window.scale;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true; 
+        vegEl.style.left = `${startLeft + dx}px`;
+        vegEl.style.top = `${startTop + dy}px`;
+      };
+
+      vegEl.onpointerup = (e) => {
+        isDragging = false; vegEl.releasePointerCapture(e.pointerId);
+        if (!moved && activeMode !== 'remove') window.openVegDetails(vegEl);
+      };
+    };
+
+    function initTouchZoomAndPlacement() {
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+      });
+
+      container.addEventListener('touchmove', (e) => {
+        if (e.touches.length === 2 && startDist > 0) {
+          const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+          window.scale = Math.max(0.5, Math.min(3, window.scale * (d / startDist)));
+          workspace.style.transform = `translate(-50%, -50%) scale(${window.scale})`;
+          const zBadge = document.getElementById('zoomBadge');
+          zBadge.innerText = `${window.getI18n('zoom')}: ${Math.round(window.scale * 100)}%`;
+          startDist = d;
+        }
+      });
+
+      container.addEventListener('click', (e) => handleCanvasClick(e.clientX, e.clientY, e.target));
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      workspace.style.transform = `translate(-50%, -50%) scale(${window.scale})`;
+      window.setLanguage(currentLang);
+    });
+  </script>
+<!-- END: Application Scripts -->
+</body></html>
