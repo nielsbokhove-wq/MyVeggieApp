@@ -89,13 +89,13 @@
     }
 
     /* Library Screen Custom Scroll */
-    #libraryList::-webkit-scrollbar {
+    #libraryList::-webkit-scrollbar, #harvestList::-webkit-scrollbar {
       width: 4px;
     }
-    #libraryList::-webkit-scrollbar-track {
+    #libraryList::-webkit-scrollbar-track, #harvestList::-webkit-scrollbar-track {
       background: #f3f4f6;
     }
-    #libraryList::-webkit-scrollbar-thumb {
+    #libraryList::-webkit-scrollbar-thumb, #harvestList::-webkit-scrollbar-thumb {
       background: #d1d5db;
       border-radius: 10px;
     }
@@ -120,7 +120,7 @@
 <script data-purpose="firebase-setup" type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByW25sPnpfCiuJobldmAdglpvqSTVkauY",
@@ -198,6 +198,39 @@
       }
     };
 
+    window.saveHarvestToFirebase = async (harvestEntry) => {
+      const user = auth.currentUser;
+      if (user) {
+        await updateDoc(doc(db, "gardens", user.uid), {
+          harvests: arrayUnion(harvestEntry)
+        });
+        await window.loadGardenFromFirebase(user.uid); // Refresh local data
+      }
+    };
+
+    window.removeHarvestFromFirebase = async (harvestId) => {
+      const user = auth.currentUser;
+      if (user) {
+        const docSnap = await getDoc(doc(db, "gardens", user.uid));
+        if (docSnap.exists()) {
+          const harvests = docSnap.data().harvests || [];
+          const updatedHarvests = harvests.filter(h => h.id !== harvestId);
+          await updateDoc(doc(db, "gardens", user.uid), { harvests: updatedHarvests });
+          await window.loadGardenFromFirebase(user.uid);
+          window.populateHarvestDiary();
+        }
+      }
+    };
+
+    window.removeAllHarvestsFromFirebase = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        await updateDoc(doc(db, "gardens", user.uid), { harvests: [] });
+        await window.loadGardenFromFirebase(user.uid);
+        window.populateHarvestDiary();
+      }
+    };
+
     window.saveLanguageToFirebase = async (lang) => {
       const user = auth.currentUser;
       if (user) {
@@ -218,8 +251,10 @@
         const data = docSnap.data();
         
         if (data.language) {
-          window.setLanguage(data.language, false); // false to avoid redundant firebase save loop
+          window.setLanguage(data.language, false);
         }
+
+        window.userHarvests = data.harvests || [];
 
         const workspace = document.getElementById('canvasWorkspace');
         workspace.innerHTML = data.content || '';
@@ -252,32 +287,152 @@
 <script>
   const translations = {
     en: {
-      login: "Login", register: "Register", emailPlaceholder: "Email address", passPlaceholder: "Password", confirmPassPlaceholder: "Confirm password", noAccount: "No account? Register here", createAccount: "Create Account", backToLogin: "Back to Login", logout: "LOG OUT", gardenTitle: "My Garden", viewGarden: "View Garden", buildGarden: "Build/change your Garden", vegLibrary: "Vegetables Library", settings: "Settings", addLine: "Add Line", addPlant: "Add Plant", remove: "Remove", duplicateLine: "Duplicate", save: "SAVE", cancel: "CANCEL", vegetableInfo: "Vegetable Info", plantedDate: "Planted date", growDays: "Grow days", estHarvest: "Estimated harvest", growthProgress: "Growth Progress", autoCalc: "Automatic calculation", back: "Back", saveChanges: "Save changes", menu: "Menu", language: "Language", english: "English", dutch: "Dutch", zoom: "Zoom", alertFillEmail: "Please fill in email and password.", alertPassMismatch: "Passwords do not match.", alertSaved: "Garden saved!", feedback: "Feedback", sunlight: "Sunlight", watering: "Watering", illnesses: "Common Illnesses", calendar: "Planting Calendar", greenhouse: "Greenhouse", outside: "Outside", atHome: "Indoor", resetView: "Reset View", adPlaceholder: "Google Ad Placeholder", jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec",
+      login: "Login",
+      register: "Register",
+      emailPlaceholder: "Email address",
+      passPlaceholder: "Password",
+      confirmPassPlaceholder: "Confirm password",
+      noAccount: "No account? Register here",
+      createAccount: "Create Account",
+      backToLogin: "Back to Login",
+      logout: "LOG OUT",
+      gardenTitle: "My Garden",
+      viewGarden: "View Garden",
+      buildGarden: "Build/change your Garden",
+      vegLibrary: "Vegetables Library",
+      settings: "Settings",
+      addLine: "Add Line",
+      addPlant: "Add Plant",
+      remove: "Remove",
+      removeAll: "Remove All",
+      doubleClickToConfirm: "Double click to confirm",
+      duplicateLine: "Duplicate",
+      save: "SAVE",
+      cancel: "CANCEL",
+      vegetableInfo: "Vegetable Info",
+      plantedDate: "Planted date",
+      growDays: "Grow days",
+      estHarvest: "Estimated harvest",
+      growthProgress: "Growth Progress",
+      autoCalc: "Automatic calculation",
+      back: "Back",
+      saveChanges: "Save changes",
+      menu: "Menu",
+      language: "Language",
+      english: "English",
+      dutch: "Dutch",
+      zoom: "Zoom",
+      alertFillEmail: "Please fill in email and password.",
+      alertPassMismatch: "Passwords do not match.",
+      alertSaved: "Garden saved!",
+      feedback: "Feedback",
+      sunlight: "Sunlight",
+      watering: "Watering",
+      illnesses: "Common Illnesses",
+      calendar: "Planting Calendar",
+      greenhouse: "Greenhouse",
+      outside: "Outside",
+      atHome: "Indoor",
+      resetView: "Reset View",
+      adPlaceholder: "Google Ad Placeholder",
+      jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec",
+      // Harvest Specific
+      harvestRegistration: "Harvest Registration",
+      harvestDiary: "Harvest Diary",
+      harvest: "Harvest",
+      weight: "Weight",
+      expectedHarvest: "Exp. Harvest/Plant",
+      promptWeight: "Enter harvest weight (grams/units):",
+      noHarvests: "No harvests recorded yet.",
       // Veg Names
       lettuce: "Lettuce", carrot: "Carrot", tomato: "Tomato", beans: "Beans", beet: "Beet", onion: "Onion", aubergine: "Aubergine", cucumber: "Cucumber", pepper: "Pepper", courgette: "Courgette", cauliflower: "Cauliflower", broccoli: "Broccoli", "red-cabbage": "Red Cabbage", garlic: "Garlic", arugula: "Arugula", potato: "Potato", corn: "Corn", mint: "Mint", dill: "Dill", thyme: "Thyme", chives: "Chives", basil: "Basil",
-      "cherry-tomato": "Cherry Tomato", "pointed-pepper": "Pointed Pepper", "chili-pepper": "Chili Pepper", gherkin: "Gherkin", "yellow-courgette": "Yellow Courgette", pumpkin: "Pumpkin", "butternut-squash": "Butternut Squash", "pattypan-squash": "Pattypan Squash", "spaghetti-squash": "Spaghetti Squash", "sweet-corn": "Sweet Corn",
-      "head-lettuce": "Head Lettuce", "butterhead-lettuce": "Butterhead Lettuce", "romaine-lettuce": "Romaine Lettuce", "iceberg-lettuce": "Iceberg Lettuce", "oak-leaf-lettuce": "Oak Leaf Lettuce", "lollo-rosso": "Lollo Rosso", "lambs-lettuce": "Lamb's Lettuce", endive: "Endive", frisee: "Frisée", spinach: "Spinach", "new-zealand-spinach": "NZ Spinach", chard: "Chard", "leaf-beet": "Leaf Beet", kale: "Kale", "cavolo-nero": "Cavolo Nero", "bok-choy": "Bok Choy", tatsoi: "Tatsoi", mizuna: "Mizuna", "miner-lettuce": "Miner's Lettuce",
-      "white-cabbage": "White Cabbage", "savoy-cabbage": "Savoy Cabbage", "pointed-cabbage": "Pointed Cabbage", "brussels-sprouts": "Brussels Sprouts", romanesco: "Romanesco", kohlrabi: "Kohlrabi", "napa-cabbage": "Napa Cabbage", "turnip-tops": "Turnip Tops", "mustard-greens": "Mustard Greens", "may-turnip": "May Turnip", rutabaga: "Rutabaga", "sea-kale": "Sea Kale",
-      "washed-carrots": "Washed Carrots", parsnip: "Parsnip", "golden-beet": "Golden Beet", "chioggia-beet": "Chioggia Beet", radish: "Radish", "black-radish": "Black Radish", daikon: "Daikon", salsify: "Salsify", celeriac: "Celeriac", "bulb-fennel": "Bulb Fennel", "jerusalem-artichoke": "Jerusalem Artichoke", horseradish: "Horseradish", "sweet-potato": "Sweet Potato",
-      "red-onion": "Red Onion", "white-onion": "White Onion", shallot: "Shallot", "spring-onion": "Spring Onion", leek: "Leek", "winter-leek": "Winter Leek", "summer-leek": "Summer Leek",
-      pea: "Pea", "sugar-snap": "Sugar Snap", "snow-pea": "Snow Pea", "marrowfat-pea": "Marrowfat Pea", "broad-bean": "Broad Bean", "green-bean": "Green Bean", "runner-bean": "Runner Bean", "scarlet-runner-bean": "Scarlet Runner", "dry-bean": "Dry Bean", "bush-bean": "Bush Bean", "pole-bean": "Pole Bean", edamame: "Edamame",
-      asparagus: "Asparagus", "green-asparagus": "Green Asparagus", "white-asparagus": "White Asparagus", celery: "Celery", "leaf-celery": "Leaf Celery", fennel: "Fennel", artichoke: "Artichoke", cardoon: "Cardoon", sorrel: "Sorrel", orach: "Orach", "leaf-beet-warmoes": "Warmoes", watercress: "Watercress", "garden-cress": "Garden Cress",
       // Veg Info
-      "Partial Shade": "Partial Shade", "Full Sun": "Full Sun", "Daily": "Daily", "2-3 times/week": "2-3 times/week", "Regularly": "Regularly", "Moderate": "Moderate", "Low": "Low", "High": "High"
+      "Partial Shade": "Partial Shade", "Full Sun": "Full Sun", "Daily": "Daily", "2-3 times/week": "2-3 times/week", "Regularly": "Regularly", "Moderate": "Moderate", "Low": "Low", "High": "High",
+      // Today Screen
+      today: "Today",
+      vandaag: "Today",
+      todayHeader: "Today - ",
+      readyToHarvest: "Ready to Harvest",
+      wateringList: "Watering Needed",
+      comingSoon: "Soon",
+      harvestReadyDesc: "ready to harvest",
+      harvestableIn: "harvestable in",
+      days: "days",
+      emptyGardenTasks: "Your garden is empty. Add plants in 'Build/change your Garden' to see tasks here."
     },
     nl: {
-      login: "Inloggen", register: "Registreren", emailPlaceholder: "E-mailadres", passPlaceholder: "Wachtwoord", confirmPassPlaceholder: "Bevestig wachtwoord", noAccount: "Nog geen account? Registreer hier", createAccount: "Maak Account Aan", backToLogin: "Terug naar Login", logout: "UITLOGGEN", gardenTitle: "Mijn Tuin", viewGarden: "Bekijk Tuin", buildGarden: "Bouw/wijzig je Tuin", vegLibrary: "Groenten Bibliotheek", settings: "Instellingen", addLine: "Lijn Toevoegen", addPlant: "Plant Toevoegen", remove: "Verwijderen", duplicateLine: "Dupliceren", save: "OPSLAAN", cancel: "ANNULEREN", vegetableInfo: "Groente Info", plantedDate: "Plantdatum", growDays: "Groeidagen", estHarvest: "Verwachte oogst", growthProgress: "Groei Voortgang", autoCalc: "Automatische berekening", back: "Terug", saveChanges: "Wijzigingen opslaan", menu: "Menu", language: "Taal", english: "Engels", dutch: "Nederlands", zoom: "Zoom", alertFillEmail: "Vul aub e-mail en wachtwoord in.", alertPassMismatch: "Wachtwoorden komen niet overeen.", alertSaved: "Tuin opgeslagen!", feedback: "Feedback", sunlight: "Zonlicht", watering: "Water geven", illnesses: "Ziekten", calendar: "Plantkalender", greenhouse: "Kas", outside: "Buiten", atHome: "Binnen", resetView: "Reset Beeld", adPlaceholder: "Google Ad Placeholder", jan: "Jan", feb: "Feb", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
+      login: "Inloggen",
+      register: "Registreren",
+      emailPlaceholder: "E-mailadres",
+      passPlaceholder: "Wachtwoord",
+      confirmPassPlaceholder: "Bevestig wachtwoord",
+      noAccount: "Nog geen account? Registreer hier",
+      createAccount: "Maak Account Aan",
+      backToLogin: "Terug naar Login",
+      logout: "UITLOGGEN",
+      gardenTitle: "Mijn Tuin",
+      viewGarden: "Bekijk Tuin",
+      buildGarden: "Bouw/wijzig je Tuin",
+      vegLibrary: "Groenten Bibliotheek",
+      settings: "Instellingen",
+      addLine: "Lijn Toevoegen",
+      addPlant: "Plant Toevoegen",
+      remove: "Verwijderen",
+      removeAll: "Verwijder alles",
+      doubleClickToConfirm: "Dubbelklik om te bevestigen",
+      duplicateLine: "Dupliceren",
+      save: "OPSLAAN",
+      cancel: "ANNULEREN",
+      vegetableInfo: "Groente Info",
+      plantedDate: "Plantdatum",
+      growDays: "Groeidagen",
+      estHarvest: "Verwachte oogst",
+      growthProgress: "Groei Voortgang",
+      autoCalc: "Automatische berekening",
+      back: "Terug",
+      saveChanges: "Wijzigingen opslaan",
+      menu: "Menu",
+      language: "Taal",
+      english: "Engels",
+      dutch: "Nederlands",
+      zoom: "Zoom",
+      alertFillEmail: "Vul aub e-mail en wachtwoord in.",
+      alertPassMismatch: "Wachtwoorden komen niet overeen.",
+      alertSaved: "Tuin opgeslagen!",
+      feedback: "Feedback",
+      sunlight: "Zonlicht",
+      watering: "Water geven",
+      illnesses: "Ziekten",
+      calendar: "Plantkalender",
+      greenhouse: "Kas",
+      outside: "Buiten",
+      atHome: "Binnen",
+      resetView: "Reset Beeld",
+      adPlaceholder: "Google Ad Placeholder",
+      jan: "Jan", feb: "Feb", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
+      // Harvest Specific
+      harvestRegistration: "Oogst Registratie",
+      harvestDiary: "Oogst Dagboek",
+      harvest: "Oogst",
+      weight: "Gewicht",
+      expectedHarvest: "Verw. Oogst/Plant",
+      promptWeight: "Voer oogstgewicht in (gram/stuks):",
+      noHarvests: "Nog geen oogsten geregistreerd.",
       // Veg Names
       lettuce: "Sla", carrot: "Wortel", tomato: "Tomaat", beans: "Bonen", beet: "Biet", onion: "Ui", aubergine: "Aubergine", cucumber: "Komkommer", pepper: "Paprika", courgette: "Courgette", cauliflower: "Bloemkool", broccoli: "Broccoli", "red-cabbage": "Rode Kool", garlic: "Knoflook", arugula: "Rucola", potato: "Aardappel", corn: "Maïs", mint: "Munt", dill: "Dille", thyme: "Tijm", chives: "Bieslook", basil: "Basilicum",
-      "cherry-tomato": "Cherrytomaat", "pointed-pepper": "Puntpaprika", "chili-pepper": "Peper", gherkin: "Augurk", "yellow-courgette": "Gele courgette", pumpkin: "Pompoen", "butternut-squash": "Flespompoen", "pattypan-squash": "Patisson", "spaghetti-squash": "Spaghettipompoen", "sweet-corn": "Suikermaïs",
-      "head-lettuce": "Kropsla", "butterhead-lettuce": "Botersla", "romaine-lettuce": "Romeinse sla", "iceberg-lettuce": "IJsbergsla", "oak-leaf-lettuce": "Eikenbladsla", "lollo-rosso": "Lollo Rosso", "lambs-lettuce": "Veldsla", endive: "Andijvie", frisee: "Krulandijvie", spinach: "Spinazie", "new-zealand-spinach": "Nieuw-Zeelandse spinazie", chard: "Snijbiet", "leaf-beet": "Bladbiet", kale: "Boerenkool", "cavolo-nero": "Palmkool", "bok-choy": "Paksoi", tatsoi: "Tatsoi", mizuna: "Mizuna", "miner-lettuce": "Winterpostelein",
-      "white-cabbage": "Witte kool", "savoy-cabbage": "Savooiekool", "pointed-cabbage": "Spitskool", "brussels-sprouts": "Spruitkool", romanesco: "Romanesco", kohlrabi: "Koolrabi", "napa-cabbage": "Chinese kool", "turnip-tops": "Raapsteel", "mustard-greens": "Mosterdblad", "may-turnip": "Meiraap", rutabaga: "Koolraap", "sea-kale": "Zeekool",
-      "washed-carrots": "Waspeen", parsnip: "Pastinaak", "golden-beet": "Gele biet", "chioggia-beet": "Chioggiabiet", radish: "Radijs", "black-radish": "Rammenas", daikon: "Daikon", salsify: "Schorseneer", celeriac: "Knolselderij", "bulb-fennel": "Knolvenkel", "jerusalem-artichoke": "Aardpeer", horseradish: "Mierikswortel", "sweet-potato": "Zoete aardappel",
-      "red-onion": "Rode ui", "white-onion": "Witte ui", shallot: "Sjalot", "spring-onion": "Bosui", leek: "Prei", "winter-leek": "Winterprei", "summer-leek": "Zomerprei",
-      pea: "Doperwt", "sugar-snap": "Sugarsnap", "snow-pea": "Peultje", "marrowfat-pea": "Kapucijner", "broad-bean": "Tuinboon", "green-bean": "Sperzieboon", "runner-bean": "Snijboon", "scarlet-runner-bean": "Pronkboon", "dry-bean": "Droogboon", "bush-bean": "Stamslaboon", "pole-bean": "Stokboon", edamame: "Edamame",
-      asparagus: "Asperge", "green-asparagus": "Groene asperge", "white-asparagus": "Witte asperge", celery: "Bleekselderij", "leaf-celery": "Selderijblad", fennel: "Venkel", artichoke: "Artisjok", cardoon: "Cardon", sorrel: "Zuring", orach: "Tuinmelde", "leaf-beet-warmoes": "Warmoes", watercress: "Waterkers", "garden-cress": "Tuinkers",
       // Veg Info
-      "Partial Shade": "Halfschaduw", "Full Sun": "Volle zon", "Daily": "Dagelijks", "2-3 keer/week": "2-3 keer/week", "Regularly": "Regelmatig", "Moderate": "Gemiddeld", "Low": "Laag", "High": "Veel"
+      "Partial Shade": "Halfschaduw", "Full Sun": "Volle zon", "Daily": "Dagelijks", "2-3 keer/week": "2-3 keer/week", "Regularly": "Regelmatig", "Moderate": "Gemiddeld", "Low": "Laag", "High": "Veel",
+      // Today Screen
+      today: "Vandaag",
+      vandaag: "Vandaag",
+      todayHeader: "Vandaag - ",
+      readyToHarvest: "Klaar om te Oogsten",
+      wateringList: "Water Geven",
+      comingSoon: "Binnenkort",
+      harvestReadyDesc: "klaar voor de oogst",
+      harvestableIn: "oogstbaar over",
+      days: "dagen",
+      emptyGardenTasks: "Je tuin is leeg. Voeg planten toe via 'Bouw/wijzig je Tuin' om hier taken te zien."
     }
   };
 
@@ -287,7 +442,11 @@
     window.currentLang = lang;
     localStorage.setItem('appLang', lang);
     document.documentElement.lang = lang;
-    if (saveToCloud && window.saveLanguageToFirebase) window.saveLanguageToFirebase(lang);
+    
+    if (saveToCloud && window.saveLanguageToFirebase) {
+      window.saveLanguageToFirebase(lang);
+    }
+    
     updateUI();
   };
 
@@ -299,21 +458,28 @@
   function updateUI() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      if (el.tagName === 'INPUT') el.placeholder = getI18n(key);
-      else el.innerText = getI18n(key);
+      if (el.tagName === 'INPUT') {
+        el.placeholder = getI18n(key);
+      } else {
+        el.innerText = getI18n(key);
+      }
     });
 
     const gTitle = document.getElementById('gardenTitle');
-    if(gTitle.getAttribute('data-key')) gTitle.innerText = getI18n(gTitle.getAttribute('data-key'));
+    if(gTitle && gTitle.getAttribute('data-key')) gTitle.innerText = getI18n(gTitle.getAttribute('data-key'));
 
     const zBadge = document.getElementById('zoomBadge');
-    const currentScale = window.scale || 0.8;
-    zBadge.innerText = `${getI18n('zoom')}: ${Math.round(currentScale * 100)}%`;
+    if (zBadge) {
+      const currentScale = window.scale || 0.8;
+      zBadge.innerText = `${getI18n('zoom')}: ${Math.round(currentScale * 100)}%`;
+    }
 
     document.querySelectorAll('.garden-veg-container').forEach(el => {
       const type = el.dataset.type;
       const labelSpan = el.querySelector('span');
-      if (labelSpan && type) labelSpan.innerText = getI18n(type);
+      if (labelSpan && type) {
+        labelSpan.innerText = getI18n(type);
+      }
     });
 
     const btnEng = document.getElementById('btnEng');
@@ -328,9 +494,22 @@
       }
     }
 
-    if(!document.getElementById('libraryScreen').classList.contains('hidden')) window.populateLibrary();
-    if(!document.getElementById('vegSubMenu').classList.contains('hidden')) window.populateVegMenu();
-    if(!document.getElementById('vegDetailScreen').classList.contains('hidden')) window.calculateHarvestDate();
+    if(!document.getElementById('libraryScreen').classList.contains('hidden')) {
+        window.populateLibrary();
+    }
+    if(!document.getElementById('harvestScreen').classList.contains('hidden')) {
+        window.populateHarvestDiary();
+    }
+    if(!document.getElementById('todayScreen').classList.contains('hidden')) {
+        window.populateTodayScreen();
+    }
+    if(!document.getElementById('vegSubMenu').classList.contains('hidden')) {
+        window.populateVegMenu();
+    }
+    
+    if(!document.getElementById('vegDetailScreen').classList.contains('hidden')) {
+        window.calculateHarvestDate();
+    }
   }
 </script>
 <!-- END: Translation Data & Logic -->
@@ -398,6 +577,19 @@
 </div>
 <div class="fixed bottom-0 left-0 w-full h-[12.5vh] bg-white border-t border-neutral-100 flex items-center justify-center z-[60]"><span class="text-neutral-400 text-xs font-medium uppercase tracking-widest" data-i18n="adPlaceholder">Google Ad Placeholder</span></div></div>
 <!-- END: Garden Screen -->
+<!-- BEGIN: Today Screen -->
+<div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 z-[90]" id="todayScreen">
+<div class="flex items-center gap-4 border-b border-neutral-100 pb-4 mb-4">
+<h2 class="text-2xl font-bold text-neutral-900" id="todayHeader">Today</h2>
+</div>
+<div class="flex-1 overflow-y-auto space-y-6 pr-1" id="todayContent">
+<!-- Dynamic sections will be injected here -->
+</div>
+<div class="mt-4">
+<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
+</div>
+</div>
+<!-- END: Today Screen -->
 <!-- BEGIN: Settings Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-6 z-[80] justify-between items-center" id="settingsScreen">
 <div class="w-full max-w-sm flex flex-col">
@@ -435,12 +627,26 @@
 </div>
 </div>
 <!-- END: Vegetable Library Screen -->
+<!-- BEGIN: Harvest Registration Screen -->
+<div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 z-[85]" id="harvestScreen">
+<div class="flex items-center justify-between border-b border-neutral-100 pb-4 mb-4">
+<h2 class="text-2xl font-bold text-neutral-900" data-i18n="harvestDiary" id="harvestTitle">Harvest Diary</h2>
+<button class="bg-red-50 text-red-500 text-[10px] font-bold px-3 py-2 rounded-lg border border-red-100 uppercase tracking-widest active:bg-red-500 active:text-white transition-all" data-i18n="removeAll" id="removeAllHarvestsBtn" onclick="confirmRemoveAllHarvests(event)">Remove All</button>
+</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1" id="harvestList">
+<!-- Harvest entries will be injected here -->
+</div>
+<div class="mt-4">
+<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
+</div>
+</div>
+<!-- END: Harvest Registration Screen -->
 <!-- BEGIN: Vegetable Detail Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-6 z-[60] justify-between items-center" id="vegDetailScreen">
 <div class="w-full max-w-sm flex flex-col">
 <div class="flex items-center gap-4 border-b border-neutral-100 pb-6 mb-8">
 <div class="bg-neutral-100 p-3 rounded-2xl border border-neutral-200" id="detailVegIcon"></div>
-<h2 class="text-3xl font-bold text-neutral-900" data-i18n="vegetableInfo" id="detailVegTitle">Vegetable Info</h2>
+<h2 class="text-3xl font-bold text-neutral-900" id="detailVegTitle">Vegetable Info</h2>
 </div>
 <div class="space-y-6">
 <div>
@@ -466,22 +672,27 @@
 </div>
 </div>
 </div>
-<div class="w-full max-w-sm grid grid-cols-2 gap-4 mt-8">
+<div class="w-full max-w-sm flex flex-col gap-3 mt-8">
+<button class="w-full bg-orange-500 text-white font-bold py-4 rounded-xl shadow-md shadow-orange-500/20" data-i18n="harvest" onclick="doHarvest()">Harvest</button>
+<div class="grid grid-cols-2 gap-4">
 <button class="w-full bg-white text-neutral-700 font-bold py-4 rounded-xl border border-neutral-200 shadow-sm" data-i18n="back" onclick="closeVegDetails()">Back</button>
 <button class="w-full bg-bladgroen text-white font-bold py-4 rounded-xl shadow-md shadow-bladgroen/20" data-i18n="saveChanges" onclick="saveVegDetails()">Save changes</button>
 </div>
 </div>
+</div>
 <!-- END: Vegetable Detail Screen -->
 <!-- BEGIN: Hamburger Menu Overlay -->
-<div class="hidden fixed inset-0 bg-white/95 z-[70] flex flex-col p-6" id="hamburgerMenu">
+<div class="hidden fixed inset-0 bg-white/95 z-[95] flex flex-col p-6" id="hamburgerMenu">
 <div class="flex justify-between items-center border-b border-neutral-100 pb-6 mb-8">
 <h3 class="text-2xl font-bold text-bladgroen" data-i18n="menu">Menu</h3>
 <button class="p-2 text-neutral-900 text-3xl" onclick="toggleMenu(false)">×</button>
 </div>
 <div class="flex flex-col space-y-3">
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="today" id="menuToday" onclick="selectMenuOption('today')">Today</button>
 <button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="viewGarden" id="menuViewGarden" onclick="selectMenuOption('viewGarden')">View Garden</button>
 <button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="buildGarden" id="menuBuildGarden" onclick="selectMenuOption('buildGarden')">Build/change your Garden</button>
 <button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="vegLibrary" id="menuVegLibrary" onclick="selectMenuOption('vegLibrary')">Vegetables Library</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="harvestRegistration" id="menuHarvestReg" onclick="selectMenuOption('harvestRegistration')">Harvest Registration</button>
 <button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="settings" id="menuSettings" onclick="selectMenuOption('settings')">Settings</button>
 </div>
 </div>
@@ -496,7 +707,7 @@
 <div id="tmpl-onion"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M256 120C160 220 140 380 256 400C372 380 352 220 256 120Z" fill="#A1887F"></path></svg></div>
 <div id="tmpl-aubergine"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M200 150Q160 300 240 420Q340 420 320 250Z" fill="#4A148C"></path></svg></div>
 <div id="tmpl-cucumber"><svg height="40" viewbox="0 0 512 512" width="40"><rect fill="#1B5E20" height="100" rx="50" transform="rotate(-30 260 250)" width="220" x="150" y="200"></rect></svg></div>
-<div id="tmpl-pepper"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M180 160C140 200 140 360 256 400C372 200 332 160Z" fill="#FFB300"></path></svg></div>
+<div id="tmpl-pepper"><svg height="40" viewbox="0 0 512 512" width="40"><path d="M180 160C140 200 140 360 256 400C372 200 372 200 332 160Z" fill="#FFB300"></path></svg></div>
 <div id="tmpl-courgette"><svg height="40" viewbox="0 0 512 512" width="40"><rect fill="#2E7D32" height="90" rx="45" transform="rotate(-15 260 255)" width="240" x="140" y="210"></rect></svg></div>
 <div id="tmpl-cauliflower"><svg height="40" viewbox="0 0 512 512" width="40"><circle cx="256" cy="270" fill="#E0E0E0" r="100"></circle><path d="M140 270Q180 160 256 200Z" fill="#4CAF50"></path></svg></div>
 <div id="tmpl-broccoli"><svg height="40" viewbox="0 0 512 512" width="40"><circle cx="210" cy="220" fill="#2E7D32" r="70"></circle><circle cx="302" cy="220" fill="#2E7D32" r="70"></circle><circle cx="256" cy="160" fill="#4CAF50" r="75"></circle><path d="M256 260V380" fill="none" stroke="#81C784" stroke-width="24"></path></svg></div>
@@ -518,121 +729,43 @@
     window.scale = 0.8;
     let translateX = -800;
     let translateY = -800;
+    
     let activeMode = 'drag'; 
     let selectedVegType = null;
     let isBuildingModeActive = false;
     let currentSelectedElement = null; 
     let currentTargetVegElement = null; 
     let gardenBackup = '';
+    window.userHarvests = [];
+
+    // Confirm state for deletions
+    let lastRemoveClickTime = 0;
+    let lastRemoveAllClickTime = 0;
+    let lastRemoveId = null;
 
     const vegLibraryData = [
-      { id: 'lettuce', growTime: 45, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs, Downy Mildew', calendar: { greenhouse: [2,3], outside: [4,5,6,7,8], home: [1,2] } },
-      { id: 'head-lettuce', growTime: 60, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
-      { id: 'butterhead-lettuce', growTime: 55, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs', calendar: { greenhouse: [2,3], outside: [3,4,5], home: [1,2] } },
-      { id: 'romaine-lettuce', growTime: 70, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids', calendar: { greenhouse: [3,4], outside: [4,5,6], home: [2,3] } },
-      { id: 'iceberg-lettuce', growTime: 85, sun: 'Full Sun', water: 'Regularly', illnesses: 'Tipburn', calendar: { greenhouse: [3], outside: [4,5,6,7], home: [2] } },
-      { id: 'oak-leaf-lettuce', growTime: 50, sun: 'Partial Shade', water: 'Daily', illnesses: 'Mildew', calendar: { greenhouse: [2,3], outside: [4,5,6,7], home: [1,2] } },
-      { id: 'lollo-rosso', growTime: 55, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [2,3] } },
-      { id: 'lambs-lettuce', growTime: 60, sun: 'Partial Shade', water: 'Moderate', illnesses: 'Downy Mildew', calendar: { greenhouse: [9,10], outside: [8,9], home: [1,2,11,12] } },
-      { id: 'endive', growTime: 80, sun: 'Full Sun', water: 'Regularly', illnesses: 'Tipburn', calendar: { greenhouse: [6,7], outside: [7,8], home: [5,6] } },
-      { id: 'frisee', growTime: 85, sun: 'Full Sun', water: 'Regularly', illnesses: 'Rot', calendar: { greenhouse: [6,7], outside: [7,8], home: [5,6] } },
-      { id: 'spinach', growTime: 45, sun: 'Partial Shade', water: 'Regularly', illnesses: 'Mildew, Leaf Miner', calendar: { greenhouse: [2,3,9], outside: [3,4,8,9], home: [1,2,11] } },
-      { id: 'new-zealand-spinach', growTime: 70, sun: 'Full Sun', water: 'Moderate', illnesses: 'Few', calendar: { greenhouse: [4], outside: [5,6], home: [3,4] } },
-      { id: 'chard', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', calendar: { greenhouse: [3], outside: [4,5,6], home: [3] } },
-      { id: 'leaf-beet', growTime: 55, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', calendar: { greenhouse: [3], outside: [4,5,6], home: [3] } },
-      { id: 'kale', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', calendar: { greenhouse: [5,6], outside: [6,7], home: [5] } },
-      { id: 'cavolo-nero', growTime: 100, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', calendar: { greenhouse: [5,6], outside: [6,7], home: [5] } },
-      { id: 'bok-choy', growTime: 50, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetle', calendar: { greenhouse: [3,4,8], outside: [4,5,7,8], home: [3] } },
-      { id: 'tatsoi', growTime: 45, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetle', calendar: { greenhouse: [3,4,8], outside: [4,5,7,8], home: [3] } },
-      { id: 'mizuna', growTime: 40, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetle', calendar: { greenhouse: [3,4,8], outside: [4,5,7,8], home: [3] } },
-      { id: 'miner-lettuce', growTime: 60, sun: 'Shade', water: 'Daily', illnesses: 'None', calendar: { greenhouse: [9,10], outside: [3,4,9], home: [1,2,11,12] } },
-      { id: 'carrot', growTime: 75, sun: 'Full Sun', water: '2-3 times/week', illnesses: 'Carrot Fly, Root Rot', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [2,3] } },
-      { id: 'washed-carrots', growTime: 70, sun: 'Full Sun', water: '2-3 times/week', illnesses: 'Carrot Fly', calendar: { greenhouse: [3], outside: [4,5,6], home: [2] } },
-      { id: 'parsnip', growTime: 120, sun: 'Full Sun', water: 'Moderate', illnesses: 'Canker', calendar: { greenhouse: [], outside: [3,4,5], home: [] } },
-      { id: 'tomato', growTime: 80, sun: 'Full Sun', water: 'Daily', illnesses: 'Blight, Blossom End Rot', calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] } },
-      { id: 'cherry-tomato', growTime: 70, sun: 'Full Sun', water: 'Daily', illnesses: 'Blight', calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] } },
-      { id: 'beans', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids, Bean Rust', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
-      { id: 'beet', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot, Beet Fly', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [3] } },
-      { id: 'golden-beet', growTime: 65, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', calendar: { greenhouse: [3,4], outside: [4,5,6], home: [3] } },
-      { id: 'chioggia-beet', growTime: 65, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', calendar: { greenhouse: [3,4], outside: [4,5,6], home: [3] } },
-      { id: 'onion', growTime: 120, sun: 'Full Sun', water: 'Low', illnesses: 'Downy Mildew, Onion Fly', calendar: { greenhouse: [2,3], outside: [3,4], home: [1,2] } },
-      { id: 'red-onion', growTime: 130, sun: 'Full Sun', water: 'Low', illnesses: 'Onion Fly', calendar: { greenhouse: [2,3], outside: [3,4], home: [1,2] } },
-      { id: 'white-onion', growTime: 120, sun: 'Full Sun', water: 'Low', illnesses: 'Onion Fly', calendar: { greenhouse: [2,3], outside: [3,4], home: [1,2] } },
-      { id: 'shallot', growTime: 100, sun: 'Full Sun', water: 'Low', illnesses: 'Downy Mildew', calendar: { greenhouse: [], outside: [2,3], home: [] } },
-      { id: 'spring-onion', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Onion Fly', calendar: { greenhouse: [2,3,4], outside: [3,4,5,6,7,8], home: [1,2] } },
-      { id: 'aubergine', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Spider Mites, Verticillium Wilt', calendar: { greenhouse: [2,3], outside: [6], home: [1,2] } },
-      { id: 'cucumber', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Powdery Mildew, Mosaic Virus', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
-      { id: 'gherkin', growTime: 55, sun: 'Full Sun', water: 'Daily', illnesses: 'Powdery Mildew', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
-      { id: 'pepper', growTime: 85, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids, Leaf Spot', calendar: { greenhouse: [2,3,4], outside: [6], home: [1,2,3] } },
-      { id: 'pointed-pepper', growTime: 90, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids', calendar: { greenhouse: [2,3,4], outside: [6], home: [1,2,3] } },
-      { id: 'chili-pepper', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', calendar: { greenhouse: [2,3,4], outside: [6], home: [1,2,3] } },
-      { id: 'courgette', growTime: 55, sun: 'Full Sun', water: 'High', illnesses: 'Powdery Mildew, Slugs', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
-      { id: 'yellow-courgette', growTime: 55, sun: 'Full Sun', water: 'High', illnesses: 'Powdery Mildew', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
-      { id: 'pumpkin', growTime: 110, sun: 'Full Sun', water: 'High', illnesses: 'Powdery Mildew', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
-      { id: 'butternut-squash', growTime: 115, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', calendar: { greenhouse: [4,5], outside: [5,6], home: [4] } },
-      { id: 'pattypan-squash', growTime: 60, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', calendar: { greenhouse: [4,5], outside: [5,6], home: [4] } },
-      { id: 'spaghetti-squash', growTime: 100, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', calendar: { greenhouse: [4,5], outside: [5,6], home: [4] } },
-      { id: 'sweet-corn', growTime: 85, sun: 'Full Sun', water: 'Regularly', illnesses: 'Earworm', calendar: { greenhouse: [4], outside: [5,6], home: [4] } },
-      { id: 'cauliflower', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Cabbage White', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
-      { id: 'broccoli', growTime: 80, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Aphids', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
-      { id: 'white-cabbage', growTime: 120, sun: 'Full Sun', water: 'Moderate', illnesses: 'Clubroot', calendar: { greenhouse: [3], outside: [4,5], home: [2] } },
-      { id: 'savoy-cabbage', growTime: 110, sun: 'Full Sun', water: 'Moderate', illnesses: 'Cabbage White', calendar: { greenhouse: [3,4], outside: [4,5,6], home: [3] } },
-      { id: 'pointed-cabbage', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Few', calendar: { greenhouse: [2,3], outside: [3,4,5], home: [1,2] } },
-      { id: 'brussels-sprouts', growTime: 150, sun: 'Full Sun', water: 'Moderate', illnesses: 'Cabbage Fly', calendar: { greenhouse: [4], outside: [5,6], home: [4] } },
-      { id: 'romanesco', growTime: 100, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot', calendar: { greenhouse: [4,5], outside: [5,6], home: [4] } },
-      { id: 'kohlrabi', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Few', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [2,3] } },
-      { id: 'napa-cabbage', growTime: 70, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetle', calendar: { greenhouse: [7,8], outside: [7,8], home: [6] } },
-      { id: 'turnip-tops', growTime: 40, sun: 'Partial Shade', water: 'Regularly', illnesses: 'Few', calendar: { greenhouse: [2,3,9], outside: [3,4,8,9], home: [1,2] } },
-      { id: 'mustard-greens', growTime: 45, sun: 'Partial Shade', water: 'Regularly', illnesses: 'Few', calendar: { greenhouse: [3,4], outside: [4,5,6,7,8], home: [3] } },
-      { id: 'may-turnip', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Root Fly', calendar: { greenhouse: [2,3], outside: [3,4,5], home: [2] } },
-      { id: 'rutabaga', growTime: 120, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', calendar: { greenhouse: [], outside: [5,6,7], home: [] } },
-      { id: 'sea-kale', growTime: 365, sun: 'Full Sun', water: 'Low', illnesses: 'Few', calendar: { greenhouse: [], outside: [3,4], home: [] } },
-      { id: 'radish', growTime: 30, sun: 'Full Sun', water: 'Daily', illnesses: 'Flea Beetle', calendar: { greenhouse: [2,3,9], outside: [3,4,5,6,7,8,9], home: [1,2,10,11,12] } },
-      { id: 'black-radish', growTime: 70, sun: 'Full Sun', water: 'Moderate', illnesses: 'Few', calendar: { greenhouse: [], outside: [6,7,8], home: [] } },
-      { id: 'daikon', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Few', calendar: { greenhouse: [], outside: [7,8], home: [] } },
-      { id: 'salsify', growTime: 180, sun: 'Full Sun', water: 'Low', illnesses: 'Few', calendar: { greenhouse: [], outside: [3,4,5], home: [] } },
-      { id: 'celeriac', growTime: 160, sun: 'Full Sun', water: 'High', illnesses: 'Leaf Spot', calendar: { greenhouse: [3,4], outside: [5,6], home: [3] } },
-      { id: 'bulb-fennel', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Bolting', calendar: { greenhouse: [4,5], outside: [6,7], home: [3,4] } },
-      { id: 'jerusalem-artichoke', growTime: 200, sun: 'Full Sun', water: 'Low', illnesses: 'None', calendar: { greenhouse: [], outside: [3,4], home: [] } },
-      { id: 'horseradish', growTime: 180, sun: 'Full Sun', water: 'Moderate', illnesses: 'Few', calendar: { greenhouse: [], outside: [3,4], home: [] } },
-      { id: 'sweet-potato', growTime: 120, sun: 'Full Sun', water: 'Moderate', illnesses: 'Few', calendar: { greenhouse: [4], outside: [5,6], home: [3,4] } },
-      { id: 'leek', growTime: 120, sun: 'Full Sun', water: 'Regularly', illnesses: 'Leek Moth', calendar: { greenhouse: [2,3], outside: [4,5], home: [1,2] } },
-      { id: 'winter-leek', growTime: 150, sun: 'Full Sun', water: 'Regularly', illnesses: 'Rust', calendar: { greenhouse: [4], outside: [5,6], home: [3,4] } },
-      { id: 'summer-leek', growTime: 100, sun: 'Full Sun', water: 'Regularly', illnesses: 'Leek Moth', calendar: { greenhouse: [2,3], outside: [4], home: [1,2] } },
-      { id: 'pea', growTime: 65, sun: 'Full Sun', water: 'Moderate', illnesses: 'Birds, Mildew', calendar: { greenhouse: [2], outside: [3,4,5], home: [1,2] } },
-      { id: 'sugar-snap', growTime: 70, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', calendar: { greenhouse: [2], outside: [3,4,5], home: [1,2] } },
-      { id: 'snow-pea', growTime: 65, sun: 'Full Sun', water: 'Moderate', illnesses: 'Birds', calendar: { greenhouse: [2], outside: [3,4,5], home: [1,2] } },
-      { id: 'marrowfat-pea', growTime: 80, sun: 'Full Sun', water: 'Moderate', illnesses: 'Birds', calendar: { greenhouse: [2], outside: [3,4,5], home: [1,2] } },
-      { id: 'broad-bean', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Black Fly', calendar: { greenhouse: [2], outside: [3,4], home: [1,2] } },
-      { id: 'green-bean', growTime: 65, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
-      { id: 'runner-bean', growTime: 75, sun: 'Full Sun', water: 'High', illnesses: 'Aphids', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
-      { id: 'scarlet-runner-bean', growTime: 80, sun: 'Full Sun', water: 'High', illnesses: 'Aphids', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
-      { id: 'dry-bean', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Bean Beetle', calendar: { greenhouse: [5], outside: [5,6], home: [4] } },
-      { id: 'bush-bean', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
-      { id: 'pole-bean', growTime: 75, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
-      { id: 'edamame', growTime: 85, sun: 'Full Sun', water: 'Moderate', illnesses: 'Bean Beetle', calendar: { greenhouse: [5], outside: [5,6], home: [4] } },
-      { id: 'asparagus', growTime: 730, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', calendar: { greenhouse: [], outside: [3,4], home: [] } },
-      { id: 'green-asparagus', growTime: 730, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', calendar: { greenhouse: [], outside: [3,4], home: [] } },
-      { id: 'white-asparagus', growTime: 730, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', calendar: { greenhouse: [], outside: [3,4], home: [] } },
-      { id: 'celery', growTime: 120, sun: 'Full Sun', water: 'High', illnesses: 'Leaf Spot', calendar: { greenhouse: [3,4], outside: [5,6], home: [3] } },
-      { id: 'leaf-celery', growTime: 80, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', calendar: { greenhouse: [3,4], outside: [4,5,6], home: [3] } },
-      { id: 'fennel', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Bolting', calendar: { greenhouse: [4,5], outside: [6,7], home: [3,4] } },
-      { id: 'artichoke', growTime: 300, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', calendar: { greenhouse: [2,3], outside: [5], home: [2] } },
-      { id: 'cardoon', growTime: 200, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', calendar: { greenhouse: [3,4], outside: [5], home: [3] } },
-      { id: 'sorrel', growTime: 60, sun: 'Partial Shade', water: 'Moderate', illnesses: 'None', calendar: { greenhouse: [3], outside: [4,5], home: [3] } },
-      { id: 'orach', growTime: 50, sun: 'Full Sun', water: 'Moderate', illnesses: 'None', calendar: { greenhouse: [3], outside: [4,5,6], home: [3] } },
-      { id: 'leaf-beet-warmoes', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', calendar: { greenhouse: [3], outside: [4,5,6], home: [3] } },
-      { id: 'watercress', growTime: 40, sun: 'Partial Shade', water: 'High', illnesses: 'Snails', calendar: { greenhouse: [3,4], outside: [4,5,6], home: [3,4] } },
-      { id: 'garden-cress', growTime: 10, sun: 'Partial Shade', water: 'Daily', illnesses: 'None', calendar: { greenhouse: [1,2,3,4,5,6,7,8,9,10,11,12], outside: [4,5,6,7,8,9], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
-      { id: 'garlic', growTime: 240, sun: 'Full Sun', water: 'Low', illnesses: 'Rust, White Rot', calendar: { greenhouse: [], outside: [10,11], home: [] } },
-      { id: 'arugula', growTime: 30, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', calendar: { greenhouse: [2,3,9,10], outside: [4,5,6,7,8], home: [1,11,12] } },
-      { id: 'potato', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Blight, Scab', calendar: { greenhouse: [], outside: [3,4,5], home: [] } },
-      { id: 'corn', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Smut, Earworm', calendar: { greenhouse: [4], outside: [5,6], home: [] } },
-      { id: 'mint', growTime: 60, sun: 'Partial Shade', water: 'High', illnesses: 'Rust', calendar: { greenhouse: [3], outside: [4,5,6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
-      { id: 'dill', growTime: 40, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', calendar: { greenhouse: [3], outside: [4,5,6,7], home: [3,4] } },
-      { id: 'thyme', growTime: 90, sun: 'Full Sun', water: 'Low', illnesses: 'Root Rot', calendar: { greenhouse: [3], outside: [4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
-      { id: 'chives', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', calendar: { greenhouse: [2,3], outside: [3,4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
-      { id: 'basil', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Fusarium Wilt, Slugs', calendar: { greenhouse: [4,5], outside: [6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } }
+      { id: 'lettuce', nameKey: 'lettuce', growTime: 45, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs, Downy Mildew', expectedHarvest: '250g', calendar: { greenhouse: [2,3], outside: [4,5,6,7,8], home: [1,2] } },
+      { id: 'carrot', nameKey: 'carrot', growTime: 75, sun: 'Full Sun', water: '2-3 times/week', illnesses: 'Carrot Fly, Root Rot', expectedHarvest: '80g', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [2,3] } },
+      { id: 'tomato', nameKey: 'tomato', growTime: 80, sun: 'Full Sun', water: 'Daily', illnesses: 'Blight, Blossom End Rot', expectedHarvest: '3kg', calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] } },
+      { id: 'beans', nameKey: 'beans', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids, Bean Rust', expectedHarvest: '400g', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
+      { id: 'beet', nameKey: 'beet', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot, Beet Fly', expectedHarvest: '150g', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [3] } },
+      { id: 'onion', nameKey: 'onion', growTime: 120, sun: 'Full Sun', water: 'Low', illnesses: 'Downy Mildew, Onion Fly', expectedHarvest: '100g', calendar: { greenhouse: [2,3], outside: [3,4], home: [1,2] } },
+      { id: 'aubergine', nameKey: 'aubergine', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Spider Mites, Verticillium Wilt', expectedHarvest: '1.5kg', calendar: { greenhouse: [2,3], outside: [6], home: [1,2] } },
+      { id: 'cucumber', nameKey: 'cucumber', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Powdery Mildew, Mosaic Virus', expectedHarvest: '2kg', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
+      { id: 'pepper', nameKey: 'pepper', growTime: 85, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids, Leaf Spot', expectedHarvest: '1kg', calendar: { greenhouse: [2,3,4], outside: [6], home: [1,2,3] } },
+      { id: 'courgette', nameKey: 'courgette', growTime: 55, sun: 'Full Sun', water: 'High', illnesses: 'Powdery Mildew, Slugs', expectedHarvest: '4kg', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
+      { id: 'cauliflower', nameKey: 'cauliflower', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Cabbage White', expectedHarvest: '800g', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
+      { id: 'broccoli', nameKey: 'broccoli', growTime: 80, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Aphids', expectedHarvest: '600g', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
+      { id: 'red-cabbage', nameKey: 'red-cabbage', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Cabbage Loopers', expectedHarvest: '1.5kg', calendar: { greenhouse: [3], outside: [4,5,6], home: [2] } },
+      { id: 'garlic', nameKey: 'garlic', growTime: 240, sun: 'Full Sun', water: 'Low', illnesses: 'Rust, White Rot', expectedHarvest: '50g', calendar: { greenhouse: [], outside: [10,11], home: [] } },
+      { id: 'arugula', nameKey: 'arugula', growTime: 30, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '100g', calendar: { greenhouse: [2,3,9,10], outside: [4,5,6,7,8], home: [1,11,12] } },
+      { id: 'potato', nameKey: 'potato', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Blight, Scab', expectedHarvest: '1kg', calendar: { greenhouse: [], outside: [3,4,5], home: [] } },
+      { id: 'corn', nameKey: 'corn', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Smut, Earworm', expectedHarvest: '2 units', calendar: { greenhouse: [4], outside: [5,6], home: [] } },
+      { id: 'mint', nameKey: 'mint', growTime: 60, sun: 'Partial Shade', water: 'High', illnesses: 'Rust', expectedHarvest: '100g', calendar: { greenhouse: [3], outside: [4,5,6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
+      { id: 'dill', nameKey: 'dill', growTime: 40, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '50g', calendar: { greenhouse: [3], outside: [4,5,6,7], home: [3,4] } },
+      { id: 'thyme', nameKey: 'thyme', growTime: 90, sun: 'Full Sun', water: 'Low', illnesses: 'Root Rot', expectedHarvest: '30g', calendar: { greenhouse: [3], outside: [4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
+      { id: 'chives', nameKey: 'chives', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', expectedHarvest: '50g', calendar: { greenhouse: [2,3], outside: [3,4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
+      { id: 'basil', nameKey: 'basil', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Fusarium Wilt, Slugs', expectedHarvest: '150g', calendar: { greenhouse: [4,5], outside: [6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } }
     ];
 
     const workspace = document.getElementById('canvasWorkspace');
@@ -642,6 +775,8 @@
       document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
       document.getElementById(screenId).classList.remove('hidden');
       if(screenId === 'libraryScreen') window.populateLibrary();
+      if(screenId === 'harvestScreen') window.populateHarvestDiary();
+      if(screenId === 'todayScreen') window.populateTodayScreen();
       updateUI();
     };
 
@@ -649,6 +784,7 @@
       const regField = document.getElementById('registerFieldContainer');
       const loginActions = document.getElementById('loginModeActions');
       const registerActions = document.getElementById('registerModeActions');
+      
       if(mode === 'register') {
         regField.classList.remove('hidden');
         loginActions.classList.add('hidden');
@@ -668,11 +804,27 @@
 
     window.selectMenuOption = function(key) {
       toggleMenu(false);
-      if(key === 'settings') { showScreen('settingsScreen'); return; }
-      if(key === 'vegLibrary') { showScreen('libraryScreen'); return; }
+      if(key === 'settings') {
+          showScreen('settingsScreen');
+          return;
+      }
+      if(key === 'vegLibrary') {
+          showScreen('libraryScreen');
+          return;
+      }
+      if(key === 'harvestRegistration') {
+          showScreen('harvestScreen');
+          return;
+      }
+      if(key === 'today') {
+          showScreen('todayScreen');
+          return;
+      }
+      
       const gTitle = document.getElementById('gardenTitle');
       gTitle.setAttribute('data-key', key);
       gTitle.innerText = window.getI18n(key);
+
       if (key === 'buildGarden') unlockGarden();
       else lockGarden();
     };
@@ -704,10 +856,12 @@
     function setMode(mode) {
       activeMode = mode;
       document.getElementById('vegSubMenu').classList.add('hidden');
+      
       ['addBtn', 'addVegBtn', 'removeBtn', 'duplicateBtn'].forEach(id => {
         const btn = document.getElementById(id);
         if(btn) btn.className = "bg-white border border-neutral-200 text-neutral-900 font-bold py-4 rounded-xl text-[9px] uppercase tracking-wider transition-all";
       });
+
       if (mode === 'add') {
         document.getElementById('addBtn').classList.replace('border-neutral-200', 'border-bladgroen');
         document.getElementById('addBtn').classList.add('text-bladgroen');
@@ -727,82 +881,179 @@
         alert("Select a line to duplicate first.");
         return;
       }
+      
       const original = currentSelectedElement;
       const x = parseInt(original.style.left) + 20;
       const y = parseInt(original.style.top) + 20;
       const rot = original.dataset.rotation || 0;
       const width = original.querySelector('.garden-line').style.width;
+
       const containerDiv = document.createElement('div');
       containerDiv.className = 'garden-line-container';
       containerDiv.style.left = `${x}px`;
       containerDiv.style.top = `${y}px`;
       containerDiv.dataset.rotation = rot;
       containerDiv.style.transform = `rotate(${rot}deg)`;
+
       const lineDiv = document.createElement('div');
       lineDiv.className = 'garden-line';
       lineDiv.style.width = width;
+
       const handleDiv = document.createElement('div');
       handleDiv.className = 'stretch-handle';
+
       containerDiv.appendChild(lineDiv);
       containerDiv.appendChild(handleDiv);
       workspace.appendChild(containerDiv);
+
       window.makeLineInteractive(containerDiv, lineDiv);
       clearSelection();
       currentSelectedElement = containerDiv;
       currentSelectedElement.classList.add('is-selected');
     };
 
-    window.getVegTmpl = function(id) {
-        // Fallback logic for extensive list of SVGs
-        const el = document.getElementById('tmpl-' + id);
-        if (el) return el.innerHTML;
-        // Map new ones to existing similar templates for visual consistency
-        if (id.includes('tomaat') || id.includes('tomato')) return document.getElementById('tmpl-tomato').innerHTML;
-        if (id.includes('sla') || id.includes('lettuce') || id.includes('endive') || id.includes('spinach') || id.includes('kool') || id.includes('cabbage') || id.includes('bok-choy') || id.includes('tatsoi') || id.includes('mizuna') || id.includes('greens') || id.includes('chard')) return document.getElementById('tmpl-lettuce').innerHTML;
-        if (id.includes('pepper') || id.includes('peper')) return document.getElementById('tmpl-pepper').innerHTML;
-        if (id.includes('squash') || id.includes('pompoen') || id.includes('pumpkin')) return document.getElementById('tmpl-aubergine').innerHTML;
-        if (id.includes('carrot') || id.includes('peen') || id.includes('parsnip') || id.includes('radish') || id.includes('radijs') || id.includes('daikon') || id.includes('salsify')) return document.getElementById('tmpl-carrot').innerHTML;
-        if (id.includes('beet') || id.includes('biet') || id.includes('celeriac') || id.includes('kohlrabi')) return document.getElementById('tmpl-beet').innerHTML;
-        if (id.includes('onion') || id.includes('ui') || id.includes('sjalot') || id.includes('shallot') || id.includes('leek') || id.includes('prei')) return document.getElementById('tmpl-onion').innerHTML;
-        if (id.includes('bean') || id.includes('boon') || id.includes('pea') || id.includes('erwt') || id.includes('snap')) return document.getElementById('tmpl-beans').innerHTML;
-        if (id.includes('courgette') || id.includes('gherkin') || id.includes('augurk') || id.includes('cucumber')) return document.getElementById('tmpl-cucumber').innerHTML;
-        if (id.includes('corn') || id.includes('maïs')) return document.getElementById('tmpl-corn').innerHTML;
-        if (id.includes('celery') || id.includes('asparagus') || id.includes('asperge') || id.includes('fennel') || id.includes('venkel')) return document.getElementById('tmpl-chives').innerHTML;
-        return document.getElementById('tmpl-lettuce').innerHTML;
-    };
-
     window.populateVegMenu = function() {
       const menu = document.getElementById('vegSubMenu');
       menu.innerHTML = '';
-      const sortedData = [...vegLibraryData].sort((a, b) => window.getI18n(a.id).localeCompare(window.getI18n(b.id)));
-      sortedData.forEach(veg => {
+      vegLibraryData.forEach(veg => {
         const btn = document.createElement('button');
         btn.onclick = () => selectVeg(veg.id);
         btn.className = "flex flex-col items-center gap-1 p-3 rounded-xl bg-white border border-neutral-100 hover:border-bladgroen transition-colors shadow-sm";
         const label = window.getI18n(veg.id);
-        btn.innerHTML = `${window.getVegTmpl(veg.id)}<span class="text-[9px] truncate w-full text-center text-neutral-500 font-medium">${label}</span>`;
+        btn.innerHTML = `${document.getElementById('tmpl-'+veg.id).innerHTML}<span class="text-[9px] truncate w-full text-center text-neutral-500 font-medium">${label}</span>`;
         menu.appendChild(btn);
       });
+    };
+
+    window.populateTodayScreen = function() {
+      const content = document.getElementById('todayContent');
+      const header = document.getElementById('todayHeader');
+      content.innerHTML = '';
+      
+      const now = new Date();
+      now.setHours(0,0,0,0);
+      const options = { day: 'numeric', month: 'long' };
+      header.innerText = window.getI18n('todayHeader') + now.toLocaleDateString(window.currentLang === 'nl' ? 'nl-NL' : 'en-GB', options);
+
+      // Data Collections
+      const readyHarvest = [];
+      const waterNeed = [];
+      const soonHarvest = [];
+
+      const gardenItems = workspace.querySelectorAll('.garden-veg-container');
+      
+      if (gardenItems.length === 0) {
+        content.innerHTML = `<div class="flex flex-col items-center justify-center py-20 px-8 text-center space-y-4">
+          <div class="bg-neutral-50 p-6 rounded-full border border-neutral-100 shadow-sm">
+            <svg class="w-12 h-12 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+          </div>
+          <p class="text-neutral-500 font-medium leading-relaxed">${window.getI18n('emptyGardenTasks')}</p>
+        </div>`;
+        return;
+      }
+
+      gardenItems.forEach(el => {
+        const type = el.dataset.type;
+        const plantedDateStr = el.dataset.plantedDate;
+        const growDays = parseInt(el.dataset.growDays);
+        
+        if (plantedDateStr && growDays) {
+          const plantedDate = new Date(plantedDateStr);
+          plantedDate.setHours(0,0,0,0);
+          const diffTime = now - plantedDate;
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          const daysLeft = growDays - diffDays;
+          
+          if (daysLeft <= 0) {
+            readyHarvest.push({ type, label: `${window.getI18n(type)} ${window.getI18n('harvestReadyDesc')}` });
+          } else if (daysLeft <= 10) {
+            soonHarvest.push({ type, label: `${window.getI18n(type)} ${window.getI18n('harvestableIn')} ${daysLeft} ${window.getI18n('days')}` });
+          }
+          
+          const vegInfo = vegLibraryData.find(v => v.id === type);
+          if (vegInfo && (vegInfo.water === 'Daily' || vegInfo.water === 'High')) {
+            waterNeed.push({ type, label: window.getI18n(type) });
+          }
+        }
+      });
+
+      const renderSection = (titleKey, icon, items) => {
+        if (items.length === 0) return '';
+        let listHtml = items.map(item => `
+          <div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-xl shadow-sm mb-2">
+            <div class="shrink-0 scale-75">${document.getElementById('tmpl-'+item.type).innerHTML}</div>
+            <span class="text-sm font-medium text-neutral-800">${item.label}</span>
+          </div>
+        `).join('');
+
+        return `
+          <section>
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xl">${icon}</span>
+              <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">${window.getI18n(titleKey)}</h3>
+            </div>
+            ${listHtml}
+          </section>
+        `;
+      };
+
+      let finalHtml = '';
+      finalHtml += renderSection('readyToHarvest', '🥕', readyHarvest);
+      finalHtml += renderSection('wateringList', '💧', waterNeed);
+      finalHtml += renderSection('comingSoon', '⏳', soonHarvest);
+
+      if (finalHtml === '') {
+        content.innerHTML = `<div class="text-center py-20 px-8">
+           <p class="text-neutral-400 font-medium">${window.getI18n('noTasksToday') || "No tasks for today."}</p>
+        </div>`;
+      } else {
+        content.innerHTML = finalHtml;
+      }
     };
 
     window.populateLibrary = function() {
       const list = document.getElementById('libraryList');
       list.innerHTML = '';
       const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-      const sortedData = [...vegLibraryData].sort((a, b) => window.getI18n(a.id).localeCompare(window.getI18n(b.id)));
+      
+      const sortedData = [...vegLibraryData].sort((a, b) => {
+        return window.getI18n(a.id).localeCompare(window.getI18n(b.id));
+      });
+
       sortedData.forEach(veg => {
         const accordionItem = document.createElement('div');
         accordionItem.className = "library-accordion-item bg-neutral-50 border border-neutral-100 rounded-2xl overflow-hidden mb-3 shadow-sm";
-        const renderRow = (label, value) => `<div class="flex justify-between items-center text-sm py-1"><span class="text-neutral-500 font-medium">${window.getI18n(label)}</span><span class="text-neutral-900 font-bold">${window.getI18n(value)}</span></div>`;
+        
+        const renderRow = (label, value) => `
+          <div class="flex justify-between items-center text-sm py-1">
+            <span class="text-neutral-500 font-medium">${window.getI18n(label)}</span>
+            <span class="text-neutral-900 font-bold">${window.getI18n(value)}</span>
+          </div>
+        `;
+
         const renderCalRow = (labelKey, activeMonths) => {
-            let cells = ''; months.forEach((m, i) => { const isActive = activeMonths.includes(i+1); cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${isActive ? 'bg-bladgroen' : 'bg-neutral-200'}"></div>`; });
-            let labels = ''; months.forEach((m, i) => { labels += `<div class="w-full text-center text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">${window.getI18n(m)}</div>`; });
-            return `<div class="space-y-1.5 mb-4"><span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span><div class="grid grid-cols-12 gap-1 mb-1">${cells}</div><div class="grid grid-cols-12 gap-1">${labels}</div></div>`;
+            let cells = '';
+            months.forEach((m, i) => {
+                const isActive = activeMonths.includes(i+1);
+                cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${isActive ? 'bg-bladgroen' : 'bg-neutral-200'}"></div>`;
+            });
+            let labels = '';
+            months.forEach((m, i) => {
+                labels += `<div class="w-full text-center text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">${window.getI18n(m)}</div>`;
+            });
+            return `
+              <div class="space-y-1.5 mb-4">
+                <span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span>
+                <div class="grid grid-cols-12 gap-1 mb-1">${cells}</div>
+                <div class="grid grid-cols-12 gap-1">${labels}</div>
+              </div>
+            `;
         };
+
         accordionItem.innerHTML = `
           <button class="w-full flex items-center justify-between p-5 focus:outline-none bg-neutral-50 active:bg-neutral-100 transition-colors" onclick="this.parentElement.classList.toggle('active')">
             <div class="flex items-center gap-4">
-              <div class="bg-white p-1.5 rounded-lg border border-neutral-100 scale-90 shadow-sm">${window.getVegTmpl(veg.id)}</div>
+              <div class="bg-white p-1.5 rounded-lg border border-neutral-100 scale-90 shadow-sm">${document.getElementById('tmpl-'+veg.id).innerHTML}</div>
               <h3 class="text-lg font-bold text-neutral-900">${window.getI18n(veg.id)}</h3>
             </div>
             <svg class="chevron-icon w-6 h-6 stroke-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -811,6 +1062,7 @@
             <div class="p-5 pt-2 space-y-5">
               <div class="space-y-1 border-t border-neutral-100 pt-5">
                 ${renderRow('growDays', veg.growTime + ' days')}
+                ${renderRow('expectedHarvest', veg.expectedHarvest)}
                 ${renderRow('sunlight', veg.sun)}
                 ${renderRow('watering', veg.water)}
                 ${renderRow('illnesses', veg.illnesses)}
@@ -822,9 +1074,115 @@
                 ${renderCalRow('atHome', veg.calendar.home)}
               </div>
             </div>
-          </div>`;
+          </div>
+        `;
         list.appendChild(accordionItem);
       });
+    };
+
+    window.populateHarvestDiary = function() {
+      const list = document.getElementById('harvestList');
+      list.innerHTML = '';
+      if (!window.userHarvests || window.userHarvests.length === 0) {
+        list.innerHTML = `<div class="text-center py-10 text-neutral-400 font-medium">${window.getI18n('noHarvests')}</div>`;
+        return;
+      }
+      
+      const sortedHarvests = [...window.userHarvests].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      sortedHarvests.forEach(h => {
+        const item = document.createElement('div');
+        item.className = "bg-neutral-50 border border-neutral-100 rounded-2xl p-4 flex items-center justify-between shadow-sm mb-3";
+        item.innerHTML = `
+          <div class="flex items-center gap-4 overflow-hidden">
+            <div class="bg-white p-2 rounded-xl border border-neutral-100 shrink-0 scale-90 shadow-sm">${document.getElementById('tmpl-'+h.type).innerHTML}</div>
+            <div class="truncate">
+              <h4 class="font-bold text-neutral-900 truncate">${window.getI18n(h.type)}</h4>
+              <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">${new Date(h.date).toLocaleDateString()}</p>
+            </div>
+          </div>
+          <div class="flex flex-col items-end gap-2 shrink-0 ml-4">
+             <div class="text-right">
+                <p class="text-sm font-bold text-bladgroen">${h.weight}</p>
+             </div>
+             <button class="remove-harvest-btn text-[9px] font-bold text-red-500 border border-red-200 bg-white px-2 py-1 rounded-md uppercase hover:bg-red-50 active:bg-red-500 active:text-white transition-colors" onclick="confirmRemoveHarvest(event, '${h.id}')" data-id="${h.id}">${window.getI18n('remove')}</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    };
+
+    window.confirmRemoveHarvest = function(e, harvestId) {
+      const now = Date.now();
+      const btn = e.currentTarget;
+      
+      if (lastRemoveId === harvestId && (now - lastRemoveClickTime) < 3000) {
+        if (window.removeHarvestFromFirebase) {
+          window.removeHarvestFromFirebase(harvestId);
+        }
+        lastRemoveId = null;
+      } else {
+        lastRemoveId = harvestId;
+        lastRemoveClickTime = now;
+        const originalText = window.getI18n('remove');
+        btn.innerText = window.getI18n('doubleClickToConfirm');
+        btn.classList.add('bg-red-500', 'text-white');
+        
+        setTimeout(() => {
+          if (lastRemoveId === harvestId) {
+            btn.innerText = originalText;
+            btn.classList.remove('bg-red-500', 'text-white');
+            lastRemoveId = null;
+          }
+        }, 3000);
+      }
+    };
+
+    window.confirmRemoveAllHarvests = function(e) {
+      const now = Date.now();
+      const btn = e.currentTarget;
+      
+      if ((now - lastRemoveAllClickTime) < 3000) {
+        if (window.removeAllHarvestsFromFirebase) {
+          window.removeAllHarvestsFromFirebase();
+        }
+        lastRemoveAllClickTime = 0;
+      } else {
+        lastRemoveAllClickTime = now;
+        const originalText = window.getI18n('removeAll');
+        btn.innerText = window.getI18n('doubleClickToConfirm');
+        btn.classList.remove('bg-red-50', 'text-red-500');
+        btn.classList.add('bg-red-600', 'text-white');
+        
+        setTimeout(() => {
+          if (lastRemoveAllClickTime > 0) {
+            btn.innerText = originalText;
+            btn.classList.remove('bg-red-600', 'text-white');
+            btn.classList.add('bg-red-50', 'text-red-500');
+            lastRemoveAllClickTime = 0;
+          }
+        }, 3000);
+      }
+    };
+
+    window.doHarvest = async function() {
+      if (!currentTargetVegElement) return;
+      const weight = prompt(window.getI18n('promptWeight'), "");
+      if (weight !== null && weight.trim() !== "") {
+        const harvestEntry = {
+          id: "h-" + Date.now(),
+          type: currentTargetVegElement.dataset.type,
+          date: new Date().toISOString(),
+          weight: weight
+        };
+        if (window.saveHarvestToFirebase) {
+          await window.saveHarvestToFirebase(harvestEntry);
+        } else {
+          window.userHarvests.push(harvestEntry);
+        }
+        alert(window.getI18n('harvest') + " saved!");
+        closeVegDetails();
+      }
     };
 
     function selectVeg(vegType) {
@@ -836,16 +1194,21 @@
     }
 
     function clearSelection() {
-      if (currentSelectedElement) { currentSelectedElement.classList.remove('is-selected'); currentSelectedElement = null; }
+      if (currentSelectedElement) {
+        currentSelectedElement.classList.remove('is-selected');
+        currentSelectedElement = null;
+      }
     }
 
     function handleCanvasClick(clientX, clientY, eventTarget) {
       if (!isBuildingModeActive) return;
       if (eventTarget.closest('.garden-veg-container') || eventTarget.closest('.garden-line-container') || eventTarget.closest('.stretch-handle')) return;
       if (currentSelectedElement) { clearSelection(); setMode('drag'); return; }
+
       const rect = container.getBoundingClientRect();
       const x = (clientX - rect.left - translateX) / window.scale;
       const y = (clientY - rect.top - translateY) / window.scale;
+
       if (activeMode === 'add') placeLineAt(x, y);
       else if (activeMode === 'add-veg' && selectedVegType) placeVegAt(x, y, selectedVegType);
     }
@@ -856,14 +1219,18 @@
       containerDiv.style.left = `${x}px`;
       containerDiv.style.top = `${y - 20}px`;
       containerDiv.dataset.rotation = 0;
+
       const lineDiv = document.createElement('div');
       lineDiv.className = 'garden-line';
       lineDiv.style.width = '38px';
+
       const handleDiv = document.createElement('div');
       handleDiv.className = 'stretch-handle';
+
       containerDiv.appendChild(lineDiv);
       containerDiv.appendChild(handleDiv);
       workspace.appendChild(containerDiv);
+
       window.makeLineInteractive(containerDiv, lineDiv);
       currentSelectedElement = containerDiv;
       currentSelectedElement.classList.add('is-selected');
@@ -876,11 +1243,14 @@
       vegDiv.style.top = `${y - 32}px`;
       vegDiv.dataset.type = type;
       vegDiv.dataset.id = "id-" + Date.now(); 
+
       const vegData = vegLibraryData.find(v => v.id === type);
       vegDiv.dataset.growDays = vegData ? vegData.growTime : "";
-      const svgTemplate = window.getVegTmpl(type);
+
+      const svgTemplate = document.getElementById(`tmpl-${type}`).innerHTML;
       const label = window.getI18n(type);
       vegDiv.innerHTML = `${svgTemplate}<span class="text-[9px] text-neutral-400 mt-0.5 font-medium pointer-events-none text-center truncate w-full">${label}</span>`;
+
       workspace.appendChild(vegDiv);
       window.makeVegInteractive(vegDiv);
       currentSelectedElement = vegDiv;
@@ -890,21 +1260,26 @@
     window.openVegDetails = function(vegEl) {
       currentTargetVegElement = vegEl;
       const type = vegEl.dataset.type;
-      document.getElementById('detailVegTitle').innerText = window.getI18n('vegetableInfo');
-      document.getElementById('detailVegIcon').innerHTML = window.getVegTmpl(type);
+      document.getElementById('detailVegTitle').innerText = window.getI18n(type);
+      document.getElementById('detailVegIcon').innerHTML = document.getElementById(`tmpl-${type}`).innerHTML;
       document.getElementById('inputPlantedDate').value = vegEl.dataset.plantedDate || "";
       document.getElementById('inputGrowDays').value = vegEl.dataset.growDays || "";
       calculateHarvestDate();
       showScreen('vegDetailScreen');
     };
 
-    window.closeVegDetails = function() { showScreen('gardenScreen'); currentTargetVegElement = null; };
+    window.closeVegDetails = function() {
+      showScreen('gardenScreen');
+      currentTargetVegElement = null;
+    };
 
     window.saveVegDetails = async function() {
       if (currentTargetVegElement) {
         currentTargetVegElement.dataset.plantedDate = document.getElementById('inputPlantedDate').value;
         currentTargetVegElement.dataset.growDays = document.getElementById('inputGrowDays').value;
-        if (window.saveGardenToFirebase) await window.saveGardenToFirebase(true);
+        if (window.saveGardenToFirebase) {
+          await window.saveGardenToFirebase(true);
+        }
       }
       closeVegDetails();
     };
@@ -916,20 +1291,29 @@
       const out = document.getElementById('outputHarvestDate');
       const progressBar = document.getElementById('growthProgressBar');
       const progressText = document.getElementById('growthProgressText');
+      
       if (pDateInput && !isNaN(gDays) && gDays > 0) {
         const plantedDate = new Date(pDateInput);
         const harvestDate = new Date(plantedDate);
         harvestDate.setDate(harvestDate.getDate() + gDays);
         out.value = harvestDate.toLocaleDateString(window.currentLang === 'nl' ? 'nl-NL' : 'en-GB');
+
         const today = new Date();
         const progress = Math.min(100, Math.max(0, Math.round((today - plantedDate) / (gDays * 86400000) * 100)));
+        
         progressBar.style.width = progress + '%';
         progressText.innerText = progress + '%';
-      } else { out.value = ""; progressBar.style.width = '0%'; progressText.innerText = '0%'; }
+      } else {
+        out.value = "";
+        progressBar.style.width = '0%';
+        progressText.innerText = '0%';
+      }
     };
 
     window.saveGarden = async function() {
-      if(window.saveGardenToFirebase) await window.saveGardenToFirebase();
+      if(window.saveGardenToFirebase) {
+        await window.saveGardenToFirebase();
+      }
       const gTitle = document.getElementById('gardenTitle');
       gTitle.setAttribute('data-key', 'viewGarden');
       gTitle.innerText = window.getI18n('viewGarden');
@@ -949,47 +1333,98 @@
     };
 
     window.makeLineInteractive = function(containerEl, lineEl) {
-      let isDragging = false, isTransforming = false, startX, startY, startLeft, startTop, startAngleInitial, startElementAngle, centerX, centerY;
+      let isDragging = false, isTransforming = false;
+      let startX, startY, startLeft, startTop, startAngleInitial, startElementAngle;
+      let centerX, centerY;
+
       containerEl.onpointerdown = (e) => {
-        if (!isBuildingModeActive) return; e.stopPropagation();
+        if (!isBuildingModeActive) return;
+        e.stopPropagation();
         if (activeMode === 'remove') { containerEl.remove(); return; }
-        clearSelection(); currentSelectedElement = containerEl; currentSelectedElement.classList.add('is-selected');
+        clearSelection();
+        currentSelectedElement = containerEl;
+        currentSelectedElement.classList.add('is-selected');
+
         if (e.target.classList.contains('stretch-handle')) {
-          isTransforming = true; const rect = containerEl.getBoundingClientRect(); centerX = rect.left; centerY = rect.top;
-          startElementAngle = parseFloat(containerEl.dataset.rotation || 0); startAngleInitial = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+          isTransforming = true;
+          const rect = containerEl.getBoundingClientRect();
+          centerX = rect.left;
+          centerY = rect.top;
+          startElementAngle = parseFloat(containerEl.dataset.rotation || 0);
+          startAngleInitial = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
         } else {
-          isDragging = true; startX = e.clientX; startY = e.clientY; startLeft = parseInt(containerEl.style.left); startTop = parseInt(containerEl.style.top);
+          isDragging = true;
+          startX = e.clientX; startY = e.clientY;
+          startLeft = parseInt(containerEl.style.left); startTop = parseInt(containerEl.style.top);
         }
         containerEl.setPointerCapture(e.pointerId);
       };
+
       containerEl.onpointermove = (e) => {
-        if (isDragging) { containerEl.style.left = `${startLeft + (e.clientX - startX) / window.scale}px`; containerEl.style.top = `${startTop + (e.clientY - startY) / window.scale}px`; }
-        else if (isTransforming) {
+        if (isDragging) {
+          containerEl.style.left = `${startLeft + (e.clientX - startX) / window.scale}px`;
+          containerEl.style.top = `${startTop + (e.clientY - startY) / window.scale}px`;
+        } else if (isTransforming) {
           const currentMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-          let deg = startElementAngle + (currentMouseAngle - startAngleInitial); const snap = 22.5; deg = Math.round(deg / snap) * snap;
-          containerEl.style.transform = `rotate(${deg}deg)`; containerEl.dataset.rotation = deg;
-          const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY) / window.scale; lineEl.style.width = `${Math.max(15, dist)}px`;
+          let deltaAngle = currentMouseAngle - startAngleInitial;
+          let deg = startElementAngle + deltaAngle;
+          const snap = 22.5;
+          deg = Math.round(deg / snap) * snap;
+          containerEl.style.transform = `rotate(${deg}deg)`;
+          containerEl.dataset.rotation = deg;
+          const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY) / window.scale;
+          lineEl.style.width = `${Math.max(15, dist)}px`;
         }
       };
+
       containerEl.onpointerup = (e) => { isDragging = isTransforming = false; containerEl.releasePointerCapture(e.pointerId); };
     };
 
     window.makeVegInteractive = function(vegEl) {
       let isDragging = false, moved = false, startX, startY, startLeft, startTop;
+
       vegEl.onpointerdown = (e) => {
-        e.stopPropagation(); if (isBuildingModeActive && activeMode === 'remove') { vegEl.remove(); return; }
-        clearSelection(); currentSelectedElement = vegEl; currentSelectedElement.classList.add('is-selected');
-        moved = false; startX = e.clientX; startY = e.clientY; startLeft = parseInt(vegEl.style.left); startTop = parseInt(vegEl.style.top);
-        if (isBuildingModeActive) { isDragging = true; vegEl.setPointerCapture(e.pointerId); }
+        e.stopPropagation();
+        if (isBuildingModeActive && activeMode === 'remove') { 
+          vegEl.remove(); 
+          return; 
+        }
+        clearSelection();
+        currentSelectedElement = vegEl;
+        currentSelectedElement.classList.add('is-selected');
+        
+        moved = false;
+        startX = e.clientX; startY = e.clientY;
+        startLeft = parseInt(vegEl.style.left); startTop = parseInt(vegEl.style.top);
+        
+        if (isBuildingModeActive) {
+          isDragging = true;
+          vegEl.setPointerCapture(e.pointerId);
+        }
       };
+
       vegEl.onpointermove = (e) => {
-        if (!isDragging) { const dx = (e.clientX - (startX||0)); const dy = (e.clientY - (startY||0)); if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true; return; }
-        const dx = (e.clientX - startX) / window.scale; const dy = (e.clientY - startY) / window.scale;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true; vegEl.style.left = `${startLeft + dx}px`; vegEl.style.top = `${startTop + dy}px`;
+        if (!isDragging) {
+            const dx = (e.clientX - (startX||0));
+            const dy = (e.clientY - (startY||0));
+            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
+            return;
+        }
+        const dx = (e.clientX - startX) / window.scale;
+        const dy = (e.clientY - startY) / window.scale;
+        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true; 
+        vegEl.style.left = `${startLeft + dx}px`;
+        vegEl.style.top = `${startTop + dy}px`;
       };
+
       vegEl.onpointerup = (e) => {
-        if (isDragging) { isDragging = false; vegEl.releasePointerCapture(e.pointerId); }
-        if (!moved && activeMode !== 'remove') window.openVegDetails(vegEl);
+        if (isDragging) {
+            isDragging = false; 
+            vegEl.releasePointerCapture(e.pointerId);
+        }
+        if (!moved && activeMode !== 'remove') {
+            window.openVegDetails(vegEl);
+        }
       };
     };
 
@@ -1008,31 +1443,68 @@
     };
 
     function initGardenInteractions() {
-      let lastX, lastY, isPanning = false, startDist = 0, initialScale = 1;
+      let lastX, lastY;
+      let isPanning = false;
+      let startDist = 0;
+      let initialScale = 1;
+
       container.onpointerdown = (e) => {
         if (e.target.closest('.garden-veg-container') || e.target.closest('.garden-line-container') || e.target.closest('.stretch-handle')) return;
-        isPanning = true; lastX = e.clientX; lastY = e.clientY; container.setPointerCapture(e.pointerId);
+        isPanning = true;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        container.setPointerCapture(e.pointerId);
       };
+
       container.onpointermove = (e) => {
         if (!isPanning) return;
-        translateX += e.clientX - lastX; translateY += e.clientY - lastY;
-        lastX = e.clientX; lastY = e.clientY; updateWorkspaceTransform();
+        const dx = e.clientX - lastX;
+        const dy = e.clientY - lastY;
+        translateX += dx;
+        translateY += dy;
+        lastX = e.clientX;
+        lastY = e.clientY;
+        updateWorkspaceTransform();
       };
-      container.onpointerup = (e) => { isPanning = false; container.releasePointerCapture(e.pointerId); };
-      container.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { isPanning = false; startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); initialScale = window.scale; } }, { passive: true });
+
+      container.onpointerup = (e) => {
+        isPanning = false;
+        container.releasePointerCapture(e.pointerId);
+      };
+
+      container.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          isPanning = false;
+          startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
+          initialScale = window.scale;
+        }
+      }, { passive: true });
+
       container.addEventListener('touchmove', (e) => {
         if (e.touches.length === 2 && startDist > 0) {
           const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-          const ratio = d / startDist; const oldScale = window.scale; window.scale = Math.max(0.2, Math.min(4, initialScale * ratio));
-          const rect = container.getBoundingClientRect(); const centerX = rect.width / 2; const centerY = rect.height / 2;
-          translateX = centerX - (centerX - translateX) * (window.scale / oldScale); translateY = centerY - (centerY - translateY) * (window.scale / oldScale);
+          const ratio = d / startDist;
+          const oldScale = window.scale;
+          window.scale = Math.max(0.2, Math.min(4, initialScale * ratio));
+          const rect = container.getBoundingClientRect();
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          translateX = centerX - (centerX - translateX) * (window.scale / oldScale);
+          translateY = centerY - (centerY - translateY) * (window.scale / oldScale);
           updateWorkspaceTransform();
         }
       }, { passive: true });
-      container.addEventListener('click', (e) => handleCanvasClick(e.clientX, e.clientY, e.target));
+
+      container.addEventListener('click', (e) => {
+          handleCanvasClick(e.clientX, e.clientY, e.target);
+      });
     }
 
-    window.addEventListener('DOMContentLoaded', () => { initGardenInteractions(); window.setLanguage(window.currentLang, false); window.resetGardenView(); });
+    window.addEventListener('DOMContentLoaded', () => {
+      initGardenInteractions();
+      window.setLanguage(window.currentLang, false);
+      window.resetGardenView();
+    });
   </script>
 <!-- END: Application Scripts -->
 </body></html>
