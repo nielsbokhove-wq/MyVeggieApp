@@ -1,6 +1,7 @@
-<!DOCTYPE html>
+<html lang="en"><head></head><body class="bg-white text-neutral-900 min-h-screen flex flex-col font-sans touch-none select-none overflow-hidden">```html
 
-<html lang="en"><head>
+
+
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
 <title>MyVeggie App</title>
@@ -114,13 +115,11 @@
     }
   </style>
 <style>#vegSubMenu span { font-size: 0.75rem !important; line-height: 1rem !important; padding-top: 4px; }</style>
-</head>
-<body class="bg-white text-neutral-900 min-h-screen flex flex-col font-sans touch-none select-none overflow-hidden">
 <!-- BEGIN: Firebase & Auth Logic -->
 <script data-purpose="firebase-setup" type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    import { getFirestore, doc, setDoc, getDoc, updateDoc, arrayUnion, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByW25sPnpfCiuJobldmAdglpvqSTVkauY",
@@ -134,6 +133,7 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
+    let unsubscribeGarden = null;
 
     window.handleAuth = async (mode) => {
       const email = document.getElementById('emailInput').value;
@@ -149,17 +149,18 @@
       }
       
       try {
-        const cred = mode === 'login' 
-          ? await signInWithEmailAndPassword(auth, email, pass)
-          : await createUserWithEmailAndPassword(auth, email, pass);
-        
-        await window.loadGardenFromFirebase(cred.user.uid);
-        window.showScreen('gardenScreen');
+        if(mode === 'login') {
+          await signInWithEmailAndPassword(auth, email, pass);
+        } else {
+          await createUserWithEmailAndPassword(auth, email, pass);
+        }
+        // Navigation and data loading handled by onAuthStateChanged
       } catch(e) { alert("Error: " + e.message); }
     };
 
     window.handleLogout = async () => {
       try {
+        if (unsubscribeGarden) unsubscribeGarden();
         await signOut(auth);
         document.getElementById('canvasWorkspace').innerHTML = '';
         document.getElementById('emailInput').value = '';
@@ -169,6 +170,25 @@
         window.showScreen('landingScreen');
       } catch(e) { alert("Logout failed: " + e.message); }
     };
+
+    // Real-time listener for garden data
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        if (unsubscribeGarden) unsubscribeGarden();
+        unsubscribeGarden = onSnapshot(doc(db, "gardens", user.uid), (docSnap) => {
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            window.applyGardenData(data);
+          } else {
+            // New user, init empty doc if needed
+            window.showScreen('gardenScreen');
+          }
+        });
+        window.showScreen('gardenScreen');
+      } else {
+        window.showScreen('landingScreen');
+      }
+    });
 
     window.saveGardenToFirebase = async (silent = false) => {
       const user = auth.currentUser;
@@ -186,11 +206,12 @@
         });
 
         const workspace = document.getElementById('canvasWorkspace');
-        const containers = workspace.querySelectorAll('.is-selected');
-        containers.forEach(c => c.classList.remove('is-selected'));
+        // Clean selection before saving
+        const clones = workspace.cloneNode(true);
+        clones.querySelectorAll('.is-selected').forEach(c => c.classList.remove('is-selected'));
 
         await setDoc(doc(db, "gardens", user.uid), { 
-          content: workspace.innerHTML,
+          content: clones.innerHTML,
           vegetablesData: vegDataMap,
           language: window.currentLang
         }, { merge: true });
@@ -204,20 +225,18 @@
         await updateDoc(doc(db, "gardens", user.uid), {
           harvests: arrayUnion(harvestEntry)
         });
-        await window.loadGardenFromFirebase(user.uid); // Refresh local data
       }
     };
 
     window.removeHarvestFromFirebase = async (harvestId) => {
       const user = auth.currentUser;
       if (user) {
-        const docSnap = await getDoc(doc(db, "gardens", user.uid));
+        const docRef = doc(db, "gardens", user.uid);
+        const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
           const harvests = docSnap.data().harvests || [];
           const updatedHarvests = harvests.filter(h => h.id !== harvestId);
-          await updateDoc(doc(db, "gardens", user.uid), { harvests: updatedHarvests });
-          await window.loadGardenFromFirebase(user.uid);
-          window.populateHarvestDiary();
+          await updateDoc(docRef, { harvests: updatedHarvests });
         }
       }
     };
@@ -226,8 +245,6 @@
       const user = auth.currentUser;
       if (user) {
         await updateDoc(doc(db, "gardens", user.uid), { harvests: [] });
-        await window.loadGardenFromFirebase(user.uid);
-        window.populateHarvestDiary();
       }
     };
 
@@ -235,51 +252,53 @@
       const user = auth.currentUser;
       if (user) {
         try {
-          await updateDoc(doc(db, "gardens", user.uid), {
-            language: lang
-          });
+          await updateDoc(doc(db, "gardens", user.uid), { language: lang });
         } catch (e) {
-          console.warn("Could not save language to existing doc, trying setDoc", e);
           await setDoc(doc(db, "gardens", user.uid), { language: lang }, { merge: true });
         }
       }
     };
 
-    window.loadGardenFromFirebase = async (uid) => {
-      const docSnap = await getDoc(doc(db, "gardens", uid));
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        
-        if (data.language) {
+    window.applyGardenData = (data) => {
+        if (data.language && data.language !== window.currentLang) {
           window.setLanguage(data.language, false);
         }
 
         window.userHarvests = data.harvests || [];
 
-        const workspace = document.getElementById('canvasWorkspace');
-        workspace.innerHTML = data.content || '';
+        // Only update workspace if not in building mode to avoid overwriting user edits
+        if (!window.isBuildingModeActive) {
+            const workspace = document.getElementById('canvasWorkspace');
+            workspace.innerHTML = data.content || '';
+            
+            const vegDataMap = data.vegetablesData || {};
+            
+            workspace.querySelectorAll('.garden-veg-container').forEach(el => {
+              const id = el.dataset.id;
+              if (id && vegDataMap[id]) {
+                el.dataset.plantedDate = vegDataMap[id].plantedDate || "";
+                el.dataset.growDays = vegDataMap[id].growDays || "";
+              }
+              window.makeVegInteractive(el);
+              const type = el.dataset.type;
+              const labelSpan = el.querySelector('span');
+              if (labelSpan && type) {
+                labelSpan.innerText = window.getI18n(type);
+              }
+            });
+            
+            workspace.querySelectorAll('.garden-line-container').forEach(c => {
+              window.makeLineInteractive(c, c.querySelector('.garden-line'));
+            });
+        }
         
-        const vegDataMap = data.vegetablesData || {};
-        
-        workspace.querySelectorAll('.garden-veg-container').forEach(el => {
-          const id = el.dataset.id;
-          if (id && vegDataMap[id]) {
-            el.dataset.plantedDate = vegDataMap[id].plantedDate || "";
-            el.dataset.growDays = vegDataMap[id].growDays || "";
-          }
-          window.makeVegInteractive(el);
-          const type = el.dataset.type;
-          const labelSpan = el.querySelector('span');
-          if (labelSpan && type) {
-            labelSpan.innerText = window.getI18n(type);
-          }
-        });
-        
-        workspace.querySelectorAll('.garden-line-container').forEach(c => {
-          window.makeLineInteractive(c, c.querySelector('.garden-line'));
-        });
-        window.resetGardenView();
-      }
+        // Always refresh lists based on latest data
+        if(!document.getElementById('harvestScreen').classList.contains('hidden')) {
+            window.populateHarvestDiary();
+        }
+        if(!document.getElementById('todayScreen').classList.contains('hidden')) {
+            window.populateTodayScreen();
+        }
     };
   </script>
 <!-- END: Firebase & Auth Logic -->
@@ -409,7 +428,7 @@
       atHome: "Binnen",
       resetView: "Reset Beeld",
       adPlaceholder: "Google Ad Placeholder",
-      jan: "Jan", feb: "Feb", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
+      jan: "Jan", feb: "Mrt", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
       // Harvest Specific
       harvestRegistration: "Oogst Registratie",
       harvestDiary: "Oogst Dagboek",
@@ -436,11 +455,10 @@
     }
   };
 
-  window.currentLang = localStorage.getItem('appLang') || 'en';
+  window.currentLang = 'en'; // Default
 
   window.setLanguage = function(lang, saveToCloud = true) {
     window.currentLang = lang;
-    localStorage.setItem('appLang', lang);
     document.documentElement.lang = lang;
     
     if (saveToCloud && window.saveLanguageToFirebase) {
@@ -494,22 +512,11 @@
       }
     }
 
-    if(!document.getElementById('libraryScreen').classList.contains('hidden')) {
-        window.populateLibrary();
-    }
-    if(!document.getElementById('harvestScreen').classList.contains('hidden')) {
-        window.populateHarvestDiary();
-    }
-    if(!document.getElementById('todayScreen').classList.contains('hidden')) {
-        window.populateTodayScreen();
-    }
-    if(!document.getElementById('vegSubMenu').classList.contains('hidden')) {
-        window.populateVegMenu();
-    }
-    
-    if(!document.getElementById('vegDetailScreen').classList.contains('hidden')) {
-        window.calculateHarvestDate();
-    }
+    if(!document.getElementById('libraryScreen').classList.contains('hidden')) { window.populateLibrary(); }
+    if(!document.getElementById('harvestScreen').classList.contains('hidden')) { window.populateHarvestDiary(); }
+    if(!document.getElementById('todayScreen').classList.contains('hidden')) { window.populateTodayScreen(); }
+    if(!document.getElementById('vegSubMenu').classList.contains('hidden')) { window.populateVegMenu(); }
+    if(!document.getElementById('vegDetailScreen').classList.contains('hidden')) { window.calculateHarvestDate(); }
   }
 </script>
 <!-- END: Translation Data & Logic -->
@@ -732,7 +739,7 @@
     
     let activeMode = 'drag'; 
     let selectedVegType = null;
-    let isBuildingModeActive = false;
+    window.isBuildingModeActive = false;
     let currentSelectedElement = null; 
     let currentTargetVegElement = null; 
     let gardenBackup = '';
@@ -804,22 +811,10 @@
 
     window.selectMenuOption = function(key) {
       toggleMenu(false);
-      if(key === 'settings') {
-          showScreen('settingsScreen');
-          return;
-      }
-      if(key === 'vegLibrary') {
-          showScreen('libraryScreen');
-          return;
-      }
-      if(key === 'harvestRegistration') {
-          showScreen('harvestScreen');
-          return;
-      }
-      if(key === 'today') {
-          showScreen('todayScreen');
-          return;
-      }
+      if(key === 'settings') { showScreen('settingsScreen'); return; }
+      if(key === 'vegLibrary') { showScreen('libraryScreen'); return; }
+      if(key === 'harvestRegistration') { showScreen('harvestScreen'); return; }
+      if(key === 'today') { showScreen('todayScreen'); return; }
       
       const gTitle = document.getElementById('gardenTitle');
       gTitle.setAttribute('data-key', key);
@@ -836,7 +831,7 @@
     };
 
     function lockGarden() {
-      isBuildingModeActive = false;
+      window.isBuildingModeActive = false;
       container.classList.remove('is-building');
       document.getElementById('buildControls').classList.add('hidden');
       document.getElementById('vegSubMenu').classList.add('hidden');
@@ -845,7 +840,7 @@
     }
 
     function unlockGarden() {
-      isBuildingModeActive = true;
+      window.isBuildingModeActive = true;
       container.classList.add('is-building');
       document.getElementById('buildControls').classList.remove('hidden');
       gardenBackup = workspace.innerHTML;
@@ -935,7 +930,6 @@
       const options = { day: 'numeric', month: 'long' };
       header.innerText = window.getI18n('todayHeader') + now.toLocaleDateString(window.currentLang === 'nl' ? 'nl-NL' : 'en-GB', options);
 
-      // Data Collections
       const readyHarvest = [];
       const waterNeed = [];
       const soonHarvest = [];
@@ -1177,8 +1171,6 @@
         };
         if (window.saveHarvestToFirebase) {
           await window.saveHarvestToFirebase(harvestEntry);
-        } else {
-          window.userHarvests.push(harvestEntry);
         }
         alert(window.getI18n('harvest') + " saved!");
         closeVegDetails();
@@ -1201,7 +1193,7 @@
     }
 
     function handleCanvasClick(clientX, clientY, eventTarget) {
-      if (!isBuildingModeActive) return;
+      if (!window.isBuildingModeActive) return;
       if (eventTarget.closest('.garden-veg-container') || eventTarget.closest('.garden-line-container') || eventTarget.closest('.stretch-handle')) return;
       if (currentSelectedElement) { clearSelection(); setMode('drag'); return; }
 
@@ -1284,6 +1276,28 @@
       closeVegDetails();
     };
 
+    window.saveGarden = async function() {
+      if(window.saveGardenToFirebase) {
+        await window.saveGardenToFirebase();
+      }
+      const gTitle = document.getElementById('gardenTitle');
+      gTitle.setAttribute('data-key', 'viewGarden');
+      gTitle.innerText = window.getI18n('viewGarden');
+      lockGarden();
+    };
+
+    window.cancelBuild = function() {
+      if (gardenBackup) {
+        workspace.innerHTML = gardenBackup;
+        workspace.querySelectorAll('.garden-veg-container').forEach(el => window.makeVegInteractive(el));
+        workspace.querySelectorAll('.garden-line-container').forEach(c => window.makeLineInteractive(c, c.querySelector('.garden-line')));
+      }
+      const gTitle = document.getElementById('gardenTitle');
+      gTitle.setAttribute('data-key', 'viewGarden');
+      gTitle.innerText = window.getI18n('viewGarden');
+      lockGarden();
+    };
+
     window.calculateHarvestDate = function() {
       const pDateInput = document.getElementById('inputPlantedDate').value;
       const gDaysInput = document.getElementById('inputGrowDays').value;
@@ -1310,35 +1324,13 @@
       }
     };
 
-    window.saveGarden = async function() {
-      if(window.saveGardenToFirebase) {
-        await window.saveGardenToFirebase();
-      }
-      const gTitle = document.getElementById('gardenTitle');
-      gTitle.setAttribute('data-key', 'viewGarden');
-      gTitle.innerText = window.getI18n('viewGarden');
-      lockGarden();
-    };
-
-    window.cancelBuild = function() {
-      if (gardenBackup) {
-        workspace.innerHTML = gardenBackup;
-        workspace.querySelectorAll('.garden-veg-container').forEach(el => window.makeVegInteractive(el));
-        workspace.querySelectorAll('.garden-line-container').forEach(c => window.makeLineInteractive(c, c.querySelector('.garden-line')));
-      }
-      const gTitle = document.getElementById('gardenTitle');
-      gTitle.setAttribute('data-key', 'viewGarden');
-      gTitle.innerText = window.getI18n('viewGarden');
-      lockGarden();
-    };
-
     window.makeLineInteractive = function(containerEl, lineEl) {
       let isDragging = false, isTransforming = false;
       let startX, startY, startLeft, startTop, startAngleInitial, startElementAngle;
       let centerX, centerY;
 
       containerEl.onpointerdown = (e) => {
-        if (!isBuildingModeActive) return;
+        if (!window.isBuildingModeActive) return;
         e.stopPropagation();
         if (activeMode === 'remove') { containerEl.remove(); return; }
         clearSelection();
@@ -1385,7 +1377,7 @@
 
       vegEl.onpointerdown = (e) => {
         e.stopPropagation();
-        if (isBuildingModeActive && activeMode === 'remove') { 
+        if (window.isBuildingModeActive && activeMode === 'remove') { 
           vegEl.remove(); 
           return; 
         }
@@ -1397,7 +1389,7 @@
         startX = e.clientX; startY = e.clientY;
         startLeft = parseInt(vegEl.style.left); startTop = parseInt(vegEl.style.top);
         
-        if (isBuildingModeActive) {
+        if (window.isBuildingModeActive) {
           isDragging = true;
           vegEl.setPointerCapture(e.pointerId);
         }
@@ -1443,10 +1435,7 @@
     };
 
     function initGardenInteractions() {
-      let lastX, lastY;
-      let isPanning = false;
-      let startDist = 0;
-      let initialScale = 1;
+      let lastX, lastY, isPanning = false, startDist = 0, initialScale = 1;
 
       container.onpointerdown = (e) => {
         if (e.target.closest('.garden-veg-container') || e.target.closest('.garden-line-container') || e.target.closest('.stretch-handle')) return;
@@ -1502,9 +1491,9 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       initGardenInteractions();
-      window.setLanguage(window.currentLang, false);
+      updateUI();
       window.resetGardenView();
     });
   </script>
 <!-- END: Application Scripts -->
-</body></html>
+```</body></html>
