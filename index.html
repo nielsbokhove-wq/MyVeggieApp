@@ -24,8 +24,8 @@
       top: 0;
       left: 0;
       transform-origin: 0 0;
-      background-color: #0a0a0a;
-      background-image: radial-gradient(#1a1a1a 1px, transparent 1px);
+      background-color: #fdfaf5;
+      background-image: radial-gradient(#e5e7eb 1px, transparent 1px);
       background-size: 40px 40px;
       touch-action: none;
     }
@@ -55,7 +55,7 @@
 
     .garden-line {
       height: 4px;
-      background-color: #5D4037;
+      background-color: #795548;
       border-radius: 2px;
       pointer-events: none;
     }
@@ -70,7 +70,8 @@
       cursor: ew-resize;
       display: none;
       z-index: 30;
-      box-shadow: 0 0 6px rgba(0,0,0,0.5);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      border: 1px solid #e5e7eb;
     }
     
     .is-building .stretch-handle {
@@ -92,10 +93,10 @@
       width: 4px;
     }
     #libraryList::-webkit-scrollbar-track {
-      background: #000;
+      background: #f3f4f6;
     }
     #libraryList::-webkit-scrollbar-thumb {
-      background: #333;
+      background: #d1d5db;
       border-radius: 10px;
     }
     
@@ -114,7 +115,7 @@
   </style>
 <style>#vegSubMenu span { font-size: 0.75rem !important; line-height: 1rem !important; padding-top: 4px; }</style>
 </head>
-<body class="bg-black text-white min-h-screen flex flex-col font-sans touch-none select-none overflow-hidden">
+<body class="bg-white text-neutral-900 min-h-screen flex flex-col font-sans touch-none select-none overflow-hidden">
 <!-- BEGIN: Firebase & Auth Logic -->
 <script data-purpose="firebase-setup" type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -248,6 +249,7 @@
       addLine: "Add Line",
       addPlant: "Add Plant",
       remove: "Remove",
+      duplicateLine: "Duplicate",
       save: "SAVE",
       cancel: "CANCEL",
       vegetableInfo: "Vegetable Info",
@@ -299,6 +301,7 @@
       addLine: "Lijn Toevoegen",
       addPlant: "Plant Toevoegen",
       remove: "Verwijderen",
+      duplicateLine: "Dupliceren",
       save: "OPSLAAN",
       cancel: "ANNULEREN",
       vegetableInfo: "Groente Info",
@@ -326,7 +329,7 @@
       outside: "Buiten",
       atHome: "Binnen",
       resetView: "Reset Beeld",
-      jan: "Jan", feb: "Feb", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
+      jan: "Jan", feb: "Fev", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
       // Veg Names
       lettuce: "Sla", carrot: "Wortel", tomato: "Tomaat", beans: "Bonen", beet: "Biet", onion: "Ui", aubergine: "Aubergine", cucumber: "Komkommer", pepper: "Paprika", courgette: "Courgette", cauliflower: "Bloemkool", broccoli: "Broccoli", "red-cabbage": "Rode Kool", garlic: "Knoflook", arugula: "Rucola", potato: "Aardappel", corn: "Maïs", mint: "Munt", dill: "Dille", thyme: "Tijm", chives: "Bieslook", basil: "Basilicum",
       // Veg Info
@@ -362,7 +365,7 @@
     if(gTitle.getAttribute('data-key')) gTitle.innerText = getI18n(gTitle.getAttribute('data-key'));
 
     const zBadge = document.getElementById('zoomBadge');
-    const currentScale = window.scale || 1;
+    const currentScale = window.scale || 0.8;
     zBadge.innerText = `${getI18n('zoom')}: ${Math.round(currentScale * 100)}%`;
 
     document.querySelectorAll('.garden-veg-container').forEach(el => {
@@ -373,8 +376,8 @@
       }
     });
 
-    document.getElementById('btnEng').className = currentLang === 'en' ? "bg-bladgroen text-black font-bold py-3 rounded-xl" : "bg-neutral-900 text-white py-3 rounded-xl border border-neutral-800";
-    document.getElementById('btnNed').className = currentLang === 'nl' ? "bg-bladgroen text-black font-bold py-3 rounded-xl" : "bg-neutral-900 text-white py-3 rounded-xl border border-neutral-800";
+    document.getElementById('btnEng').className = currentLang === 'en' ? "bg-bladgroen text-white font-bold py-3 rounded-xl shadow-sm" : "bg-neutral-100 text-neutral-600 py-3 rounded-xl border border-neutral-200";
+    document.getElementById('btnNed').className = currentLang === 'nl' ? "bg-bladgroen text-white font-bold py-3 rounded-xl shadow-sm" : "bg-neutral-100 text-neutral-600 py-3 rounded-xl border border-neutral-200";
 
     if(!document.getElementById('libraryScreen').classList.contains('hidden')) {
         window.populateLibrary();
@@ -390,28 +393,28 @@
 </script>
 <!-- END: Translation Data & Logic -->
 <!-- BEGIN: Landing/Login Screen -->
-<div class="screen fixed inset-0 flex flex-col items-center justify-center p-6 z-50 bg-black" id="landingScreen">
+<div class="screen fixed inset-0 flex flex-col items-center justify-center p-6 z-50 bg-white" id="landingScreen">
 <div class="w-full max-sm flex flex-col items-center">
 <div class="mb-12 flex flex-col items-center">
 <svg class="w-16 h-16 fill-bladgroen mb-4" viewbox="0 0 24 24">
 <path d="M17,8C8,10 5.9,16.17 3.82,21.34C5.71,20 10.8,17.22 17,16.5V21H19V14.5C21,14 22,11.5 22,9C22,4.5 17.5,2 17.5,2C17.5,2 14,5.5 14,8H17M15.3,11.4C13.43,12.06 11.05,13.1 8.53,14.65C10.74,13.62 13.06,12.8 15,12.33C15.1,12.03 15.2,11.72 15.3,11.4Z"></path>
 </svg>
-<h1 class="text-4xl font-bold text-bladgroen">MyVeggie App</h1>
+<h1 class="text-4xl font-bold text-bladgroen">MyVeggie</h1>
 </div>
 <div class="w-full space-y-4">
-<input class="w-full bg-neutral-900 text-white p-4 rounded-xl border border-neutral-800 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="emailPlaceholder" id="emailInput" placeholder="Email address" type="email"/>
-<input class="w-full bg-neutral-900 text-white p-4 rounded-xl border border-neutral-800 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="passPlaceholder" id="passInput" placeholder="Password" type="password"/>
+<input class="w-full bg-neutral-100 text-neutral-900 p-4 rounded-xl border border-neutral-200 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="emailPlaceholder" id="emailInput" placeholder="Email address" type="email"/>
+<input class="w-full bg-neutral-100 text-neutral-900 p-4 rounded-xl border border-neutral-200 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="passPlaceholder" id="passInput" placeholder="Password" type="password"/>
 <div class="hidden" id="registerFieldContainer">
-<input class="w-full bg-neutral-900 text-white p-4 rounded-xl border border-neutral-800 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="confirmPassPlaceholder" id="passConfirmInput" placeholder="Confirm password" type="password"/>
+<input class="w-full bg-neutral-100 text-neutral-900 p-4 rounded-xl border border-neutral-200 focus:border-bladgroen focus:ring-1 focus:ring-bladgroen outline-none transition-all" data-i18n="confirmPassPlaceholder" id="passConfirmInput" placeholder="Confirm password" type="password"/>
 </div>
 <div class="pt-4 space-y-3" id="authActions">
 <div class="flex flex-col space-y-3" id="loginModeActions">
-<button class="w-full bg-white text-black font-bold py-4 px-4 rounded-xl text-lg hover:bg-gray-200 transition-colors" data-i18n="login" onclick="handleAuth('login')">Login</button>
-<button class="w-full bg-transparent text-gray-400 font-medium py-2 text-sm hover:text-white transition-colors" data-i18n="noAccount" onclick="setAuthMode('register')">No account? Register here</button>
+<button class="w-full bg-bladgroen text-white font-bold py-4 px-4 rounded-xl text-lg hover:brightness-105 transition-colors shadow-md shadow-bladgroen/20" data-i18n="login" onclick="handleAuth('login')">Login</button>
+<button class="w-full bg-transparent text-neutral-500 font-medium py-2 text-sm hover:text-neutral-900 transition-colors" data-i18n="noAccount" onclick="setAuthMode('register')">No account? Register here</button>
 </div>
 <div class="hidden flex flex-col space-y-3" id="registerModeActions">
-<button class="w-full bg-bladgroen text-white font-bold py-4 px-4 rounded-xl text-lg hover:brightness-110 transition-colors" data-i18n="createAccount" onclick="handleAuth('register')">Create Account</button>
-<button class="w-full bg-transparent text-gray-400 font-medium py-2 text-sm hover:text-white transition-colors" data-i18n="backToLogin" onclick="setAuthMode('login')">Back to Login</button>
+<button class="w-full bg-bladgroen text-white font-bold py-4 px-4 rounded-xl text-lg hover:brightness-105 transition-colors shadow-md shadow-bladgroen/20" data-i18n="createAccount" onclick="handleAuth('register')">Create Account</button>
+<button class="w-full bg-transparent text-neutral-500 font-medium py-2 text-sm hover:text-neutral-900 transition-colors" data-i18n="backToLogin" onclick="setAuthMode('login')">Back to Login</button>
 </div>
 </div>
 </div>
@@ -419,124 +422,125 @@
 </div>
 <!-- END: Landing/Login Screen -->
 <!-- BEGIN: Garden Screen -->
-<div class="screen hidden fixed inset-0 bg-black flex flex-col p-4 pb-[15vh]" id="gardenScreen">
-<div class="flex items-center justify-between w-full border-b border-neutral-800 pb-4 z-10">
-<button class="p-2 text-white focus:outline-none" data-purpose="menu-toggle" onclick="toggleMenu(true)">
-<svg class="w-8 h-8 stroke-white" fill="none" stroke-width="2" viewbox="0 0 24 24">
+<div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 pb-[15vh]" id="gardenScreen">
+<div class="flex items-center justify-between w-full border-b border-neutral-100 pb-4 z-10">
+<button class="p-2 text-neutral-900 focus:outline-none" data-purpose="menu-toggle" onclick="toggleMenu(true)">
+<svg class="w-8 h-8 stroke-neutral-900" fill="none" stroke-width="2" viewbox="0 0 24 24">
 <line x1="4" x2="20" y1="6" y2="6"></line>
 <line x1="4" x2="20" y1="12" y2="12"></line>
 <line x1="4" x2="20" y1="18" y2="18"></line>
 </svg>
 </button>
-<h2 class="text-xl font-bold text-white flex-1 text-center" data-key="gardenTitle" id="gardenTitle">My Garden</h2>
-<button class="text-xs font-bold px-3 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-bladgroen active:bg-neutral-800 transition-colors" data-i18n="logout" onclick="handleLogout()">LOG OUT</button>
+<h2 class="text-xl font-bold text-neutral-900 flex-1 text-center" data-key="gardenTitle" id="gardenTitle">My Garden</h2>
+<button class="text-xs font-bold px-3 py-2 rounded-lg bg-neutral-100 border border-neutral-200 text-neutral-700 active:bg-neutral-200 transition-colors" data-i18n="logout" onclick="handleLogout()">LOG OUT</button>
 </div>
-<div class="flex-1 relative overflow-hidden bg-neutral-950 rounded-2xl border border-neutral-900 shadow-inner mt-4" id="canvasContainer">
+<div class="flex-1 relative overflow-hidden bg-neutral-50 rounded-2xl border border-neutral-100 shadow-inner mt-4" id="canvasContainer">
 <div id="canvasWorkspace"></div>
-<button class="absolute top-4 right-4 bg-neutral-900/80 p-2 rounded-full border border-neutral-800 text-white active:scale-95 transition-transform" onclick="window.resetGardenView()">
+<button class="absolute top-4 right-4 bg-white/80 p-2 rounded-full border border-neutral-200 text-neutral-700 active:scale-95 transition-transform shadow-sm" onclick="window.resetGardenView()">
 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewbox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 </button>
-<div class="absolute bottom-4 right-4 bg-neutral-900/90 text-[10px] px-2 py-1 rounded border border-neutral-800 text-gray-400" id="zoomBadge">Zoom: 100%</div>
+<div class="absolute bottom-4 right-4 bg-white/90 text-[10px] px-2 py-1 rounded border border-neutral-200 text-neutral-500" id="zoomBadge">Zoom: 80%</div>
 </div>
-<div class="hidden bg-neutral-900 border border-neutral-800 rounded-2xl p-4 mb-4 overflow-y-auto grid grid-cols-4 gap-3 z-10 h-72" id="vegSubMenu"></div>
+<div class="hidden bg-neutral-50 border border-neutral-100 rounded-2xl p-4 mb-4 overflow-y-auto grid grid-cols-4 gap-3 z-10 h-72 shadow-sm" id="vegSubMenu"></div>
 <div class="hidden flex flex-col gap-3 z-10" id="buildControls">
-<div class="grid grid-cols-3 gap-2">
-<button class="bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider" data-i18n="addLine" id="addBtn" onclick="setMode('add')">Add Line</button>
-<button class="bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider" data-i18n="addPlant" id="addVegBtn" onclick="setMode('veg-menu')">Add Plant</button>
-<button class="bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider" data-i18n="remove" id="removeBtn" onclick="setMode('remove')">Remove</button>
+<div class="grid grid-cols-4 gap-2">
+<button class="bg-white border border-neutral-200 text-neutral-900 font-bold py-4 rounded-xl text-[9px] uppercase tracking-wider transition-all" data-i18n="addLine" id="addBtn" onclick="setMode('add')">Add Line</button>
+<button class="bg-white border border-neutral-200 text-neutral-900 font-bold py-4 rounded-xl text-[9px] uppercase tracking-wider transition-all" data-i18n="addPlant" id="addVegBtn" onclick="setMode('veg-menu')">Add Plant</button>
+<button class="bg-white border border-neutral-200 text-neutral-900 font-bold py-4 rounded-xl text-[9px] uppercase tracking-wider transition-all" data-i18n="duplicateLine" id="duplicateBtn" onclick="duplicateSelectedLine()">Duplicate</button>
+<button class="bg-white border border-neutral-200 text-neutral-900 font-bold py-4 rounded-xl text-[9px] uppercase tracking-wider transition-all" data-i18n="remove" id="removeBtn" onclick="setMode('remove')">Remove</button>
 </div>
 <div class="grid grid-cols-2 gap-3">
-<button class="bg-bladgroen text-black font-bold py-4 rounded-xl text-sm shadow-lg shadow-bladgroen/20" data-i18n="save" onclick="saveGarden()">SAVE</button>
-<button class="bg-red-600/20 border border-red-600/50 text-red-500 font-bold py-4 rounded-xl text-sm" data-i18n="cancel" onclick="cancelBuild()">CANCEL</button>
+<button class="bg-bladgroen text-white font-bold py-4 rounded-xl text-sm shadow-lg shadow-bladgroen/20" data-i18n="save" onclick="saveGarden()">SAVE</button>
+<button class="bg-white border border-red-200 text-red-500 font-bold py-4 rounded-xl text-sm" data-i18n="cancel" onclick="cancelBuild()">CANCEL</button>
 </div>
 </div>
-<div class="fixed bottom-0 left-0 w-full h-[12.5vh] bg-neutral-900 border-t border-neutral-800 flex items-center justify-center z-[60]"><span class="text-gray-500 text-xs font-medium uppercase tracking-widest">Google Ad Placeholder</span></div></div>
+<div class="fixed bottom-0 left-0 w-full h-[12.5vh] bg-white border-t border-neutral-100 flex items-center justify-center z-[60]"><span class="text-neutral-400 text-xs font-medium uppercase tracking-widest">Google Ad Placeholder</span></div></div>
 <!-- END: Garden Screen -->
 <!-- BEGIN: Settings Screen -->
-<div class="screen hidden fixed inset-0 bg-black flex flex-col p-6 z-[80] justify-between items-center" id="settingsScreen">
+<div class="screen hidden fixed inset-0 bg-white flex flex-col p-6 z-[80] justify-between items-center" id="settingsScreen">
 <div class="w-full max-w-sm flex flex-col">
-<div class="flex items-center gap-4 border-b border-neutral-800 pb-6 mb-8">
-<h2 class="text-3xl font-bold text-white" data-i18n="settings" id="settingsTitle">Settings</h2>
+<div class="flex items-center gap-4 border-b border-neutral-100 pb-6 mb-8">
+<h2 class="text-3xl font-bold text-neutral-900" data-i18n="settings" id="settingsTitle">Settings</h2>
 </div>
 <div class="space-y-8">
 <div>
-<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-4" data-i18n="language" id="langLabel">Language</label>
+<label class="block text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-4" data-i18n="language" id="langLabel">Language</label>
 <div class="grid grid-cols-2 gap-4">
-<button class="bg-bladgroen text-black font-bold py-3 rounded-xl" data-i18n="english" id="btnEng" onclick="setLanguage('en')">English</button>
-<button class="bg-neutral-900 text-white py-3 rounded-xl border border-neutral-800" data-i18n="dutch" id="btnNed" onclick="setLanguage('nl')">Dutch</button>
+<button class="bg-bladgroen text-white font-bold py-3 rounded-xl shadow-sm" data-i18n="english" id="btnEng" onclick="setLanguage('en')">English</button>
+<button class="bg-neutral-100 text-neutral-600 py-3 rounded-xl border border-neutral-200" data-i18n="dutch" id="btnNed" onclick="setLanguage('nl')">Dutch</button>
 </div>
 </div>
 <div>
-<button class="w-full bg-neutral-900 text-bladgroen font-bold py-4 rounded-xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="feedback" id="btnFeedback" onclick="sendFeedback()">Feedback</button>
+<button class="w-full bg-white text-bladgroen font-bold py-4 rounded-xl border border-neutral-200 active:bg-neutral-50 transition-colors shadow-sm" data-i18n="feedback" id="btnFeedback" onclick="sendFeedback()">Feedback</button>
 </div>
 </div>
 </div>
 <div class="w-full max-w-sm mt-8">
-<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-800" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
+<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
 </div>
 </div>
 <!-- END: Settings Screen -->
 <!-- BEGIN: Vegetable Library Screen -->
-<div class="screen hidden fixed inset-0 bg-black flex flex-col p-4 z-[85]" id="libraryScreen">
-<div class="flex items-center gap-4 border-b border-neutral-800 pb-4 mb-4">
-<h2 class="text-2xl font-bold text-white" data-i18n="vegLibrary" id="libraryTitle">Vegetables Library</h2>
+<div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 z-[85]" id="libraryScreen">
+<div class="flex items-center gap-4 border-b border-neutral-100 pb-4 mb-4">
+<h2 class="text-2xl font-bold text-neutral-900" data-i18n="vegLibrary" id="libraryTitle">Vegetables Library</h2>
 </div>
 <div class="flex-1 overflow-y-auto space-y-3 pr-1" id="libraryList">
 <!-- Library items will be injected here -->
 </div>
 <div class="mt-4">
-<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-800" data-i18n="back" id="libraryBackBtn" onclick="showScreen('gardenScreen')">Back</button>
+<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" id="libraryBackBtn" onclick="showScreen('gardenScreen')">Back</button>
 </div>
 </div>
 <!-- END: Vegetable Library Screen -->
 <!-- BEGIN: Vegetable Detail Screen -->
-<div class="screen hidden fixed inset-0 bg-black flex flex-col p-6 z-[60] justify-between items-center" id="vegDetailScreen">
+<div class="screen hidden fixed inset-0 bg-white flex flex-col p-6 z-[60] justify-between items-center" id="vegDetailScreen">
 <div class="w-full max-w-sm flex flex-col">
-<div class="flex items-center gap-4 border-b border-neutral-800 pb-6 mb-8">
-<div class="bg-neutral-900 p-3 rounded-2xl border border-neutral-800" id="detailVegIcon"></div>
-<h2 class="text-3xl font-bold text-white" data-i18n="vegetableInfo" id="detailVegTitle">Vegetable Info</h2>
+<div class="flex items-center gap-4 border-b border-neutral-100 pb-6 mb-8">
+<div class="bg-neutral-100 p-3 rounded-2xl border border-neutral-200" id="detailVegIcon"></div>
+<h2 class="text-3xl font-bold text-neutral-900" data-i18n="vegetableInfo" id="detailVegTitle">Vegetable Info</h2>
 </div>
 <div class="space-y-6">
 <div>
-<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2" data-i18n="plantedDate" for="inputPlantedDate">Planted date</label>
-<input class="w-full bg-neutral-900 border border-neutral-800 rounded-xl py-4 px-4 text-white focus:border-bladgroen outline-none" id="inputPlantedDate" oninput="calculateHarvestDate()" type="date"/>
+<label class="block text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-2" data-i18n="plantedDate" for="inputPlantedDate">Planted date</label>
+<input class="w-full bg-neutral-100 border border-neutral-200 rounded-xl py-4 px-4 text-neutral-900 focus:border-bladgroen outline-none" id="inputPlantedDate" oninput="calculateHarvestDate()" type="date"/>
 </div>
 <div>
-<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2" data-i18n="growDays" for="inputGrowDays">Grow days</label>
-<input class="w-full bg-neutral-900 border border-neutral-800 rounded-xl py-4 px-4 text-white focus:border-bladgroen outline-none" id="inputGrowDays" min="0" oninput="calculateHarvestDate()" placeholder="e.g. 60" type="number"/>
+<label class="block text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-2" data-i18n="growDays" for="inputGrowDays">Grow days</label>
+<input class="w-full bg-neutral-100 border border-neutral-200 rounded-xl py-4 px-4 text-neutral-900 focus:border-bladgroen outline-none" id="inputGrowDays" min="0" oninput="calculateHarvestDate()" placeholder="e.g. 60" type="number"/>
 </div>
 <div>
-<label class="block text-xs font-semibold text-gray-500 uppercase tracking-widest mb-2" data-i18n="estHarvest" for="outputHarvestDate">Estimated harvest</label>
-<input class="w-full bg-neutral-950 border border-neutral-800 rounded-xl py-4 px-4 text-bladgroen font-bold focus:outline-none" data-i18n="autoCalc" id="outputHarvestDate" placeholder="Automatic calculation" readonly="" type="text"/>
+<label class="block text-xs font-semibold text-neutral-400 uppercase tracking-widest mb-2" data-i18n="estHarvest" for="outputHarvestDate">Estimated harvest</label>
+<input class="w-full bg-neutral-50 border border-neutral-100 rounded-xl py-4 px-4 text-bladgroen font-bold focus:outline-none" data-i18n="autoCalc" id="outputHarvestDate" placeholder="Automatic calculation" readonly="" type="text"/>
 </div>
 <div>
 <div class="flex justify-between items-end mb-2">
-<label class="text-xs font-semibold text-gray-500 uppercase tracking-widest" data-i18n="growthProgress">Growth Progress</label>
+<label class="text-xs font-semibold text-neutral-400 uppercase tracking-widest" data-i18n="growthProgress">Growth Progress</label>
 <span class="text-xs font-bold text-bladgroen" id="growthProgressText">0%</span>
 </div>
-<div class="w-full bg-neutral-900 rounded-full h-3 overflow-hidden border border-neutral-800">
+<div class="w-full bg-neutral-100 rounded-full h-3 overflow-hidden border border-neutral-200">
 <div class="bg-bladgroen h-full transition-all duration-500" id="growthProgressBar" style="width: 0%"></div>
 </div>
 </div>
 </div>
 </div>
 <div class="w-full max-w-sm grid grid-cols-2 gap-4 mt-8">
-<button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-800" data-i18n="back" onclick="closeVegDetails()">Back</button>
-<button class="w-full bg-bladgroen text-black font-bold py-4 rounded-xl" data-i18n="saveChanges" onclick="saveVegDetails()">Save changes</button>
+<button class="w-full bg-white text-neutral-700 font-bold py-4 rounded-xl border border-neutral-200 shadow-sm" data-i18n="back" onclick="closeVegDetails()">Back</button>
+<button class="w-full bg-bladgroen text-white font-bold py-4 rounded-xl shadow-md shadow-bladgroen/20" data-i18n="saveChanges" onclick="saveVegDetails()">Save changes</button>
 </div>
 </div>
 <!-- END: Vegetable Detail Screen -->
 <!-- BEGIN: Hamburger Menu Overlay -->
-<div class="hidden fixed inset-0 bg-black/95 z-[70] flex flex-col p-6" id="hamburgerMenu">
-<div class="flex justify-between items-center border-b border-neutral-800 pb-6 mb-8">
+<div class="hidden fixed inset-0 bg-white/95 z-[70] flex flex-col p-6" id="hamburgerMenu">
+<div class="flex justify-between items-center border-b border-neutral-100 pb-6 mb-8">
 <h3 class="text-2xl font-bold text-bladgroen" data-i18n="menu">Menu</h3>
-<button class="p-2 text-white text-3xl" onclick="toggleMenu(false)">×</button>
+<button class="p-2 text-neutral-900 text-3xl" onclick="toggleMenu(false)">×</button>
 </div>
 <div class="flex flex-col space-y-3">
-<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="viewGarden" id="menuViewGarden" onclick="selectMenuOption('viewGarden')">View Garden</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="buildGarden" id="menuBuildGarden" onclick="selectMenuOption('buildGarden')">Build/change your Garden</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="vegLibrary" id="menuVegLibrary" onclick="selectMenuOption('vegLibrary')">Vegetables Library</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-900 rounded-2xl border border-neutral-800 active:bg-neutral-800 transition-colors" data-i18n="settings" id="menuSettings" onclick="selectMenuOption('settings')">Settings</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="viewGarden" id="menuViewGarden" onclick="selectMenuOption('viewGarden')">View Garden</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="buildGarden" id="menuBuildGarden" onclick="selectMenuOption('buildGarden')">Build/change your Garden</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="vegLibrary" id="menuVegLibrary" onclick="selectMenuOption('vegLibrary')">Vegetables Library</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="settings" id="menuSettings" onclick="selectMenuOption('settings')">Settings</button>
 </div>
 </div>
 <!-- END: Hamburger Menu Overlay -->
@@ -569,8 +573,8 @@
 <!-- BEGIN: Application Scripts -->
 <script data-purpose="app-logic">
     // --- Global State ---
-    window.scale = 1;
-    let translateX = -800; // Start centered-ish in 2000x2000
+    window.scale = 0.8;
+    let translateX = -800; // Updated later in resetGardenView
     let translateY = -800;
     
     let activeMode = 'drag'; 
@@ -611,9 +615,6 @@
     window.showScreen = function(screenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
       document.getElementById(screenId).classList.remove('hidden');
-      if(screenId !== 'vegDetailScreen' && screenId !== 'gardenScreen' && screenId !== 'settingsScreen' && screenId !== 'libraryScreen') {
-          // Reset UI state for auth screens
-      }
       if(screenId === 'libraryScreen') window.populateLibrary();
       if(screenId === 'gardenScreen') updateUI();
     };
@@ -687,21 +688,60 @@
       activeMode = mode;
       document.getElementById('vegSubMenu').classList.add('hidden');
       
-      ['addBtn', 'addVegBtn', 'removeBtn'].forEach(id => {
+      ['addBtn', 'addVegBtn', 'removeBtn', 'duplicateBtn'].forEach(id => {
         const btn = document.getElementById(id);
-        if(btn) btn.className = "bg-neutral-900 border border-neutral-800 text-white font-bold py-4 rounded-xl text-[10px] uppercase tracking-wider transition-all";
+        if(btn) btn.className = "bg-white border border-neutral-200 text-neutral-900 font-bold py-4 rounded-xl text-[9px] uppercase tracking-wider transition-all";
       });
 
       if (mode === 'add') {
-        document.getElementById('addBtn').classList.replace('bg-neutral-900', 'bg-green-700');
+        document.getElementById('addBtn').classList.replace('border-neutral-200', 'border-bladgroen');
+        document.getElementById('addBtn').classList.add('text-bladgroen');
       } else if (mode === 'veg-menu') {
-        document.getElementById('addVegBtn').classList.replace('bg-neutral-900', 'bg-green-700');
+        document.getElementById('addVegBtn').classList.replace('border-neutral-200', 'border-bladgroen');
+        document.getElementById('addVegBtn').classList.add('text-bladgroen');
         document.getElementById('vegSubMenu').classList.remove('hidden');
       } else if (mode === 'remove') {
-        document.getElementById('removeBtn').classList.replace('bg-neutral-900', 'bg-red-700');
+        document.getElementById('removeBtn').classList.replace('border-neutral-200', 'border-red-500');
+        document.getElementById('removeBtn').classList.add('text-red-500');
         clearSelection();
       }
     }
+
+    window.duplicateSelectedLine = function() {
+      if (!currentSelectedElement || !currentSelectedElement.classList.contains('garden-line-container')) {
+        alert("Select a line to duplicate first.");
+        return;
+      }
+      
+      const original = currentSelectedElement;
+      const x = parseInt(original.style.left) + 20;
+      const y = parseInt(original.style.top) + 20;
+      const rot = original.dataset.rotation || 0;
+      const width = original.querySelector('.garden-line').style.width;
+
+      const containerDiv = document.createElement('div');
+      containerDiv.className = 'garden-line-container';
+      containerDiv.style.left = `${x}px`;
+      containerDiv.style.top = `${y}px`;
+      containerDiv.dataset.rotation = rot;
+      containerDiv.style.transform = `rotate(${rot}deg)`;
+
+      const lineDiv = document.createElement('div');
+      lineDiv.className = 'garden-line';
+      lineDiv.style.width = width;
+
+      const handleDiv = document.createElement('div');
+      handleDiv.className = 'stretch-handle';
+
+      containerDiv.appendChild(lineDiv);
+      containerDiv.appendChild(handleDiv);
+      workspace.appendChild(containerDiv);
+
+      window.makeLineInteractive(containerDiv, lineDiv);
+      clearSelection();
+      currentSelectedElement = containerDiv;
+      currentSelectedElement.classList.add('is-selected');
+    };
 
     window.populateVegMenu = function() {
       const menu = document.getElementById('vegSubMenu');
@@ -709,9 +749,9 @@
       vegLibraryData.forEach(veg => {
         const btn = document.createElement('button');
         btn.onclick = () => selectVeg(veg.id);
-        btn.className = "flex flex-col items-center gap-1 p-3 rounded-xl bg-neutral-950 border border-neutral-800 hover:border-bladgroen transition-colors";
+        btn.className = "flex flex-col items-center gap-1 p-3 rounded-xl bg-white border border-neutral-100 hover:border-bladgroen transition-colors shadow-sm";
         const label = window.getI18n(veg.id);
-        btn.innerHTML = `${document.getElementById('tmpl-'+veg.id).innerHTML}<span class="text-[9px] truncate w-full text-center text-gray-400 font-medium">${label}</span>`;
+        btn.innerHTML = `${document.getElementById('tmpl-'+veg.id).innerHTML}<span class="text-[9px] truncate w-full text-center text-neutral-500 font-medium">${label}</span>`;
         menu.appendChild(btn);
       });
     };
@@ -727,12 +767,12 @@
 
       sortedData.forEach(veg => {
         const accordionItem = document.createElement('div');
-        accordionItem.className = "library-accordion-item bg-neutral-900 border border-neutral-800 rounded-2xl overflow-hidden mb-3";
+        accordionItem.className = "library-accordion-item bg-neutral-50 border border-neutral-100 rounded-2xl overflow-hidden mb-3 shadow-sm";
         
         const renderRow = (label, value) => `
-          <div class="flex justify-between items-center text-base py-1">
-            <span class="text-gray-400 font-medium">${window.getI18n(label)}</span>
-            <span class="text-white font-bold">${window.getI18n(value)}</span>
+          <div class="flex justify-between items-center text-sm py-1">
+            <span class="text-neutral-500 font-medium">${window.getI18n(label)}</span>
+            <span class="text-neutral-900 font-bold">${window.getI18n(value)}</span>
           </div>
         `;
 
@@ -740,15 +780,15 @@
             let cells = '';
             months.forEach((m, i) => {
                 const isActive = activeMonths.includes(i+1);
-                cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${isActive ? 'bg-bladgroen' : 'bg-neutral-800'}"></div>`;
+                cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${isActive ? 'bg-bladgroen' : 'bg-neutral-200'}"></div>`;
             });
             let labels = '';
             months.forEach((m, i) => {
-                labels += `<div class="w-full text-center text-[10px] font-bold text-gray-500 uppercase tracking-tighter">${window.getI18n(m)}</div>`;
+                labels += `<div class="w-full text-center text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">${window.getI18n(m)}</div>`;
             });
             return `
               <div class="space-y-1.5 mb-4">
-                <span class="text-sm text-gray-300 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span>
+                <span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span>
                 <div class="grid grid-cols-12 gap-1 mb-1">${cells}</div>
                 <div class="grid grid-cols-12 gap-1">${labels}</div>
               </div>
@@ -756,23 +796,23 @@
         };
 
         accordionItem.innerHTML = `
-          <button class="w-full flex items-center justify-between p-5 focus:outline-none bg-neutral-900 active:bg-neutral-800 transition-colors" onclick="this.parentElement.classList.toggle('active')">
+          <button class="w-full flex items-center justify-between p-5 focus:outline-none bg-neutral-50 active:bg-neutral-100 transition-colors" onclick="this.parentElement.classList.toggle('active')">
             <div class="flex items-center gap-4">
-              <div class="bg-neutral-800 p-1.5 rounded-lg border border-neutral-700 scale-90">${document.getElementById('tmpl-'+veg.id).innerHTML}</div>
-              <h3 class="text-xl font-bold text-bladgroen">${window.getI18n(veg.id)}</h3>
+              <div class="bg-white p-1.5 rounded-lg border border-neutral-100 scale-90 shadow-sm">${document.getElementById('tmpl-'+veg.id).innerHTML}</div>
+              <h3 class="text-lg font-bold text-neutral-900">${window.getI18n(veg.id)}</h3>
             </div>
-            <svg class="chevron-icon w-6 h-6 stroke-gray-500 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            <svg class="chevron-icon w-6 h-6 stroke-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
-          <div class="library-accordion-content bg-neutral-950/40">
+          <div class="library-accordion-content bg-white">
             <div class="p-5 pt-2 space-y-5">
-              <div class="space-y-1 border-t border-neutral-800 pt-5">
+              <div class="space-y-1 border-t border-neutral-100 pt-5">
                 ${renderRow('growDays', veg.growTime + ' days')}
                 ${renderRow('sunlight', veg.sun)}
                 ${renderRow('watering', veg.water)}
                 ${renderRow('illnesses', veg.illnesses)}
               </div>
-              <div class="pt-3 border-t border-neutral-800 space-y-4">
-                <h4 class="text-sm font-bold text-bladgroen uppercase tracking-widest border-b border-bladgroen/20 pb-2">${window.getI18n('calendar')}</h4>
+              <div class="pt-3 border-t border-neutral-100 space-y-4">
+                <h4 class="text-xs font-bold text-bladgroen uppercase tracking-widest border-b border-bladgroen/10 pb-2">${window.getI18n('calendar')}</h4>
                 ${renderCalRow('greenhouse', veg.calendar.greenhouse)}
                 ${renderCalRow('outside', veg.calendar.outside)}
                 ${renderCalRow('atHome', veg.calendar.home)}
@@ -788,7 +828,7 @@
       selectedVegType = vegType;
       activeMode = 'add-veg';
       document.getElementById('vegSubMenu').classList.add('hidden');
-      document.getElementById('addVegBtn').className = "bg-green-900 text-green-300 font-bold py-4 rounded-xl text-[10px] border border-green-600 uppercase tracking-wider";
+      document.getElementById('addVegBtn').className = "bg-white text-bladgroen font-bold py-4 rounded-xl text-[9px] border-2 border-bladgroen uppercase tracking-wider";
       clearSelection();
     }
 
@@ -818,7 +858,6 @@
       containerDiv.style.left = `${x}px`;
       containerDiv.style.top = `${y - 20}px`;
       containerDiv.dataset.rotation = 0;
-      containerDiv.dataset.width = 38;
 
       const lineDiv = document.createElement('div');
       lineDiv.className = 'garden-line';
@@ -849,7 +888,7 @@
 
       const svgTemplate = document.getElementById(`tmpl-${type}`).innerHTML;
       const label = window.getI18n(type);
-      vegDiv.innerHTML = `${svgTemplate}<span class="text-[9px] text-gray-500 mt-0.5 font-medium pointer-events-none text-center truncate w-full">${label}</span>`;
+      vegDiv.innerHTML = `${svgTemplate}<span class="text-[9px] text-neutral-400 mt-0.5 font-medium pointer-events-none text-center truncate w-full">${label}</span>`;
 
       workspace.appendChild(vegDiv);
       window.makeVegInteractive(vegDiv);
@@ -898,7 +937,6 @@
         harvestDate.setDate(harvestDate.getDate() + gDays);
         out.value = harvestDate.toLocaleDateString(currentLang === 'nl' ? 'nl-NL' : 'en-GB');
 
-        // Growth Percentage Calculation
         const today = new Date();
         const progress = Math.min(100, Math.max(0, Math.round((today - plantedDate) / (gDays * 86400000) * 100)));
         
@@ -935,7 +973,8 @@
 
     window.makeLineInteractive = function(containerEl, lineEl) {
       let isDragging = false, isTransforming = false;
-      let startX, startY, startLeft, startTop, startAngle;
+      let startX, startY, startLeft, startTop, startAngleInitial, startElementAngle;
+      let centerX, centerY; // Fixed center point for stable rotation
 
       containerEl.onpointerdown = (e) => {
         if (!isBuildingModeActive) return;
@@ -947,8 +986,15 @@
 
         if (e.target.classList.contains('stretch-handle')) {
           isTransforming = true;
+          // Capture the fixed center point in viewport coordinates at start
           const rect = containerEl.getBoundingClientRect();
-          startAngle = Math.atan2(e.clientY - rect.top, e.clientX - rect.left) - (parseInt(containerEl.dataset.rotation || 0) * Math.PI / 180);
+          // transform-origin is 0px 20px, so center is top-left of the line container
+          centerX = rect.left;
+          centerY = rect.top;
+          
+          startElementAngle = parseFloat(containerEl.dataset.rotation || 0);
+          // Calculate the initial pointer angle relative to that fixed center
+          startAngleInitial = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
         } else {
           isDragging = true;
           startX = e.clientX; startY = e.clientY;
@@ -962,12 +1008,20 @@
           containerEl.style.left = `${startLeft + (e.clientX - startX) / window.scale}px`;
           containerEl.style.top = `${startTop + (e.clientY - startY) / window.scale}px`;
         } else if (isTransforming) {
-          const rect = containerEl.getBoundingClientRect();
-          const angle = Math.atan2(e.clientY - rect.top, e.clientX - rect.left) - startAngle;
-          let deg = Math.round(angle * 180 / Math.PI);
+          // Calculate current angle relative to the fixed center stored on pointerdown
+          const currentMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+          let deltaAngle = currentMouseAngle - startAngleInitial;
+          let deg = startElementAngle + deltaAngle;
+          
+          // Apply 22.5 degree snapping
+          const snap = 22.5;
+          deg = Math.round(deg / snap) * snap;
+
           containerEl.style.transform = `rotate(${deg}deg)`;
           containerEl.dataset.rotation = deg;
-          const dist = Math.hypot(e.clientX - rect.left, e.clientY - rect.top) / window.scale;
+          
+          // Distance calculation for length scaling relative to center
+          const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY) / window.scale;
           lineEl.style.width = `${Math.max(15, dist)}px`;
         }
       };
@@ -980,13 +1034,10 @@
 
       vegEl.onpointerdown = (e) => {
         e.stopPropagation();
-        
-        // Remove only works in building mode
         if (isBuildingModeActive && activeMode === 'remove') { 
           vegEl.remove(); 
           return; 
         }
-        
         clearSelection();
         currentSelectedElement = vegEl;
         currentSelectedElement.classList.add('is-selected');
@@ -995,7 +1046,6 @@
         startX = e.clientX; startY = e.clientY;
         startLeft = parseInt(vegEl.style.left); startTop = parseInt(vegEl.style.top);
         
-        // Dragging is ONLY allowed in building mode
         if (isBuildingModeActive) {
           isDragging = true;
           vegEl.setPointerCapture(e.pointerId);
@@ -1004,7 +1054,6 @@
 
       vegEl.onpointermove = (e) => {
         if (!isDragging) {
-            // Even if not dragging, track if pointer moved enough to NOT be a click
             const dx = (e.clientX - (startX||0));
             const dy = (e.clientY - (startY||0));
             if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
@@ -1022,15 +1071,12 @@
             isDragging = false; 
             vegEl.releasePointerCapture(e.pointerId);
         }
-        
-        // Open details on click, whether building or viewing (as long as we didn't drag it)
         if (!moved && activeMode !== 'remove') {
             window.openVegDetails(vegEl);
         }
       };
     };
 
-    // --- Improved Panning & Zooming System ---
     function updateWorkspaceTransform() {
       workspace.style.transform = `translate(${translateX}px, ${translateY}px) scale(${window.scale})`;
       const zBadge = document.getElementById('zoomBadge');
@@ -1039,7 +1085,7 @@
 
     window.resetGardenView = function() {
       const containerRect = container.getBoundingClientRect();
-      window.scale = 0.6; // zoomed out slightly to see more
+      window.scale = 0.8;
       translateX = (containerRect.width / 2) - (1000 * window.scale);
       translateY = (containerRect.height / 2) - (1000 * window.scale);
       updateWorkspaceTransform();
@@ -1052,9 +1098,7 @@
       let initialScale = 1;
 
       container.onpointerdown = (e) => {
-        // If clicking on items in build mode or veg in view mode, don't pan if interacting
         if (e.target.closest('.garden-veg-container') || e.target.closest('.garden-line-container') || e.target.closest('.stretch-handle')) return;
-        
         isPanning = true;
         lastX = e.clientX;
         lastY = e.clientY;
@@ -1079,7 +1123,7 @@
 
       container.addEventListener('touchstart', (e) => {
         if (e.touches.length === 2) {
-          isPanning = false; // prioritize zoom
+          isPanning = false;
           startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
           initialScale = window.scale;
         }
@@ -1089,25 +1133,18 @@
         if (e.touches.length === 2 && startDist > 0) {
           const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
           const ratio = d / startDist;
-          
-          // Anchor zoom to center of container
           const oldScale = window.scale;
           window.scale = Math.max(0.2, Math.min(4, initialScale * ratio));
-          
           const rect = container.getBoundingClientRect();
           const centerX = rect.width / 2;
           const centerY = rect.height / 2;
-
-          // Adjust translation to keep the "center" point stable during zoom
           translateX = centerX - (centerX - translateX) * (window.scale / oldScale);
           translateY = centerY - (centerY - translateY) * (window.scale / oldScale);
-
           updateWorkspaceTransform();
         }
       }, { passive: true });
 
       container.addEventListener('click', (e) => {
-          // Detect click for placement (only if building)
           handleCanvasClick(e.clientX, e.clientY, e.target);
       });
     }
