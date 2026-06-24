@@ -112,7 +112,6 @@
       cursor: move;
     }
 
-    /* Library Screen Custom Scroll */
     #libraryList::-webkit-scrollbar, #harvestList::-webkit-scrollbar {
       width: 4px;
     }
@@ -222,7 +221,8 @@
             vegDataMap[id] = {
               plantedDate: el.dataset.plantedDate || "",
               growDays: el.dataset.growDays || "",
-              type: el.dataset.type || ""
+              type: el.dataset.type || "",
+              customName: el.dataset.customName || ""
             };
           }
         });
@@ -298,12 +298,17 @@
               if (id && vegDataMap[id]) {
                 el.dataset.plantedDate = vegDataMap[id].plantedDate || "";
                 el.dataset.growDays = vegDataMap[id].growDays || "";
+                el.dataset.customName = vegDataMap[id].customName || "";
               }
               window.makeVegInteractive(el);
               const type = el.dataset.type;
               const labelSpan = el.querySelector('span');
               if (labelSpan && type) {
-                labelSpan.innerText = window.getI18n(type);
+                if (type === 'custom' && el.dataset.customName) {
+                  labelSpan.innerText = el.dataset.customName;
+                } else {
+                  labelSpan.innerText = window.getI18n(type);
+                }
               }
             });
             
@@ -325,167 +330,31 @@
 <script>
   const translations = {
     en: {
-      login: "Login",
-      register: "Register",
-      emailPlaceholder: "Email address",
-      passPlaceholder: "Password",
-      confirmPassPlaceholder: "Confirm password",
-      noAccount: "No account? Register here",
-      createAccount: "Create Account",
-      backToLogin: "Back to Login",
-      logout: "LOG OUT",
-      gardenTitle: "My Garden",
-      viewGarden: "View Garden",
-      buildGarden: "Build/change your Garden",
-      vegLibrary: "Vegetables Library",
-      settings: "Settings",
-      addLine: "Add Line",
-      addPlant: "Add Plant",
-      remove: "Remove",
-      removeAll: "Remove All",
-      duplicateLine: "Duplicate",
-      save: "SAVE",
-      cancel: "CANCEL",
-      vegetableInfo: "Vegetable Info",
-      plantedDate: "Planted date",
-      growDays: "Grow days",
-      estHarvest: "Estimated harvest",
-      growthProgress: "Growth Progress",
-      autoCalc: "Automatic calculation",
-      back: "Back",
-      saveChanges: "Save changes",
-      menu: "Menu",
-      language: "Language",
-      english: "English",
-      dutch: "Dutch",
-      zoom: "Zoom",
-      alertFillEmail: "Please fill in email and password.",
-      alertPassMismatch: "Passwords do not match.",
-      alertSaved: "Garden saved!",
-      feedback: "Feedback",
-      sunlight: "Sunlight",
-      watering: "Watering",
-      illnesses: "Common Illnesses",
-      calendar: "Planting Calendar",
-      greenhouse: "Greenhouse",
-      outside: "Outside",
-      atHome: "Indoor",
-      resetView: "Reset View",
-      adPlaceholder: "Google Ad Placeholder",
-      jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec",
-      // Harvest Specific
-      harvestRegistration: "Harvest Registration",
-      harvestDiary: "Harvest Diary",
-      harvest: "Harvest",
-      weight: "Weight",
-      expectedHarvest: "Exp. Harvest/Plant",
-      promptWeight: "Enter harvest weight (grams/units):",
-      noHarvests: "No harvests recorded yet.",
-      confirmDeleteOne: "Do you want to remove this?",
-      confirmDeleteAll: "Do you want to remove all?",
-      // Veg Names
-      lettuce: "Lettuce", carrot: "Carrot", tomato: "Tomato", beans: "Beans", beet: "Beet", onion: "Onion", aubergine: "Aubergine", cucumber: "Cucumber", pepper: "Pepper", courgette: "Courgette", cauliflower: "Cauliflower", broccoli: "Broccoli", "red-cabbage": "Red Cabbage", garlic: "Garlic", arugula: "Arugula", potato: "Potato", corn: "Corn", mint: "Mint", dill: "Dill", thyme: "Thyme", chives: "Chives", basil: "Basil",
-      // Veg Info
-      "Partial Shade": "Partial Shade", "Full Sun": "Full Sun", "Daily": "Daily", "2-3 times/week": "2-3 times/week", "Regularly": "Regularly", "Moderate": "Moderate", "Low": "Low", "High": "High",
-      // Today Screen
-      today: "Today",
-      vandaag: "Today",
-      todayHeader: "Today - ",
-      readyToHarvest: "Ready to Harvest",
-      wateringList: "Watering Needed",
-      comingSoon: "Soon",
-      harvestReadyDesc: "ready to harvest",
-      harvestableIn: "harvestable in",
-      days: "days",
-      emptyGardenTasks: "Your garden is empty. Add plants in 'Build/change your Garden' to see tasks here."
+      login: "Login", register: "Register", emailPlaceholder: "Email address", passPlaceholder: "Password", confirmPassPlaceholder: "Confirm password", noAccount: "No account? Register here", createAccount: "Create Account", backToLogin: "Back to Login", logout: "LOG OUT", gardenTitle: "My Garden", viewGarden: "View Garden", buildGarden: "Build/change your Garden", vegLibrary: "Vegetables Library", settings: "Settings", addLine: "Add Line", addPlant: "Add Plant", remove: "Remove", removeAll: "Remove All", duplicateLine: "Duplicate", save: "SAVE", cancel: "CANCEL", vegetableInfo: "Vegetable Info", plantedDate: "Planted date", growDays: "Grow days", estHarvest: "Estimated harvest", growthProgress: "Growth Progress", autoCalc: "Automatic calculation", back: "Back", saveChanges: "Save changes", menu: "Menu", language: "Language", english: "English", dutch: "Dutch", zoom: "Zoom", alertFillEmail: "Please fill in email and password.", alertPassMismatch: "Passwords do not match.", alertSaved: "Garden saved!", feedback: "Feedback", sunlight: "Sunlight", watering: "Watering", illnesses: "Common Illnesses", calendar: "Planting Calendar", greenhouse: "Greenhouse", outside: "Outside", atHome: "Indoor", resetView: "Reset View", adPlaceholder: "Google Ad Placeholder", jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec",
+      harvestRegistration: "Harvest Registration", harvestDiary: "Harvest Diary", harvest: "Harvest", weight: "Weight", expectedHarvest: "Exp. Harvest/Plant", promptWeight: "Enter harvest weight (grams/units):", noHarvests: "No harvests recorded yet.", confirmDeleteOne: "Do you want to remove this?", confirmDeleteAll: "Do you want to remove all?",
+      today: "Today", vandaag: "Today", todayHeader: "Today - ", readyToHarvest: "Ready to Harvest", wateringList: "Watering Needed", comingSoon: "Soon", harvestReadyDesc: "ready to harvest", harvestableIn: "harvestable in", days: "days", emptyGardenTasks: "Your garden is empty. Add plants in 'Build/change your Garden' to see tasks here.", promptCustomName: "Enter name for your custom plant:",
+      // 50 Vegetables
+      potato: "Potato", tomato: "Tomato", lettuce: "Lettuce", carrot: "Carrot", onion: "Onion", courgette: "Courgette", cucumber: "Cucumber", spinach: "Spinach", "green-bean": "Green Bean", pod: "Pod", pea: "Pea", "runner-bean": "Runner Bean", leek: "Leek", kohlrabi: "Kohlrabi", radish: "Radish", beetroot: "Beetroot", endive: "Endive", kale: "Kale", "white-cabbage": "White Cabbage", "red-cabbage": "Red Cabbage", "savoy-cabbage": "Savoy Cabbage", cauliflower: "Cauliflower", broccoli: "Broccoli", "brussels-sprout": "Brussels Sprout", "chinese-cabbage": "Chinese Cabbage", "pak-choi": "Pak Choi", chard: "Chard", celeriac: "Celeriac", celery: "Celery", fennel: "Fennel", parsnip: "Parsnip", "turnip-greens": "Turnip Greens", arugula: "Arugula", "lambs-lettuce": "Lambs Lettuce", "iceberg-lettuce": "Iceberg Lettuce", "romaine-lettuce": "Romaine Lettuce", "little-gem": "Little Gem", "bell-pepper": "Bell Pepper", "chili-pepper": "Chili Pepper", eggplant: "Eggplant", pumpkin: "Pumpkin", pattypan: "Pattypan", corn: "Corn", garlic: "Garlic", shallot: "Shallot", "spring-onion": "Spring Onion", "winter-radish": "Winter Radish", "may-turnip": "May Turnip", salsify: "Salsify", "bulb-fennel": "Bulb Fennel", custom: "Custom Plant",
+      // Veg Info Generic
+      "Partial Shade": "Partial Shade", "Full Sun": "Full Sun", "Daily": "Daily", "2-3 times/week": "2-3 times/week", "Regularly": "Regularly", "Moderate": "Moderate", "Low": "Low", "High": "High"
     },
     nl: {
-      login: "Inloggen",
-      register: "Registreren",
-      emailPlaceholder: "E-mailadres",
-      passPlaceholder: "Wachtwoord",
-      confirmPassPlaceholder: "Bevestig wachtwoord",
-      noAccount: "Nog geen account? Registreer hier",
-      createAccount: "Maak Account Aan",
-      backToLogin: "Terug naar Login",
-      logout: "UITLOGGEN",
-      gardenTitle: "Mijn Tuin",
-      viewGarden: "Bekijk Tuin",
-      buildGarden: "Bouw/wijzig je Tuin",
-      vegLibrary: "Groenten Bibliotheek",
-      settings: "Instellingen",
-      addLine: "Lijn Toevoegen",
-      addPlant: "Plant Toevoegen",
-      remove: "Verwijderen",
-      removeAll: "Verwijder alles",
-      duplicateLine: "Dupliceren",
-      save: "OPSLAAN",
-      cancel: "ANNULEREN",
-      vegetableInfo: "Groente Info",
-      plantedDate: "Plantdatum",
-      growDays: "Groeidagen",
-      estHarvest: "Verwachte oogst",
-      growthProgress: "Groei Voortgang",
-      autoCalc: "Automatische berekening",
-      back: "Terug",
-      saveChanges: "Wijzigingen opslaan",
-      menu: "Menu",
-      language: "Taal",
-      english: "Engels",
-      dutch: "Nederlands",
-      zoom: "Zoom",
-      alertFillEmail: "Vul aub e-mail en wachtwoord in.",
-      alertPassMismatch: "Wachtwoorden komen niet overeen.",
-      alertSaved: "Tuin opgeslagen!",
-      feedback: "Feedback",
-      sunlight: "Zonlicht",
-      watering: "Water geven",
-      illnesses: "Ziekten",
-      calendar: "Plantkalender",
-      greenhouse: "Kas",
-      outside: "Buiten",
-      atHome: "Binnen",
-      resetView: "Reset Beeld",
-      adPlaceholder: "Google Ad Placeholder",
-      jan: "Jan", feb: "Mrt", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
-      // Harvest Specific
-      harvestRegistration: "Oogst Registratie",
-      harvestDiary: "Oogst Dagboek",
-      harvest: "Oogst",
-      weight: "Gewicht",
-      expectedHarvest: "Verw. Oogst/Plant",
-      promptWeight: "Voer oogstgewicht in (gram/stuks):",
-      noHarvests: "Nog geen oogsten geregistreerd.",
-      confirmDeleteOne: "Wilt u deze verwijderen?",
-      confirmDeleteAll: "Wilt u alles verwijderen?",
-      // Veg Names
-      lettuce: "Sla", carrot: "Wortel", tomato: "Tomaat", beans: "Bonen", beet: "Biet", onion: "Ui", aubergine: "Aubergine", cucumber: "Komkommer", pepper: "Paprika", courgette: "Courgette", cauliflower: "Bloemkool", broccoli: "Broccoli", "red-cabbage": "Rode Kool", garlic: "Knoflook", arugula: "Rucola", potato: "Aardappel", corn: "Maïs", mint: "Munt", dill: "Dille", thyme: "Tijm", chives: "Bieslook", basil: "Basilicum",
-      // Veg Info
-      "Partial Shade": "Halfschaduw", "Full Sun": "Volle zon", "Daily": "Dagelijks", "2-3 keer/week": "2-3 keer/week", "Regularly": "Regelmatig", "Moderate": "Gemiddeld", "Low": "Laag", "High": "Veel",
-      // Today Screen
-      today: "Vandaag",
-      vandaag: "Vandaag",
-      todayHeader: "Vandaag - ",
-      readyToHarvest: "Klaar om te Oogsten",
-      wateringList: "Water Geven",
-      comingSoon: "Binnenkort",
-      harvestReadyDesc: "klaar voor de oogst",
-      harvestableIn: "oogstbaar over",
-      days: "dagen",
-      emptyGardenTasks: "Je tuin is leeg. Voeg planten toe via 'Bouw/wijzig je Tuin' om hier taken te zien."
+      login: "Inloggen", register: "Registreren", emailPlaceholder: "E-mailadres", passPlaceholder: "Wachtwoord", confirmPassPlaceholder: "Bevestig wachtwoord", noAccount: "Nog geen account? Registreer hier", createAccount: "Maak Account Aan", backToLogin: "Terug naar Login", logout: "UITLOGGEN", gardenTitle: "Mijn Tuin", viewGarden: "Bekijk Tuin", buildGarden: "Bouw/wijzig je Tuin", vegLibrary: "Groenten Bibliotheek", settings: "Instellingen", addLine: "Lijn Toevoegen", addPlant: "Plant Toevoegen", remove: "Verwijderen", removeAll: "Verwijder alles", duplicateLine: "Dupliceren", save: "OPSLAAN", cancel: "ANNULEREN", vegetableInfo: "Groente Info", plantedDate: "Plantdatum", growDays: "Groeidagen", estHarvest: "Verwachte oogst", growthProgress: "Groei Voortgang", autoCalc: "Automatische berekening", back: "Terug", saveChanges: "Wijzigingen opslaan", menu: "Menu", language: "Taal", english: "Engels", dutch: "Nederlands", zoom: "Zoom", alertFillEmail: "Vul aub e-mail en wachtwoord in.", alertPassMismatch: "Wachtwoorden komen niet overeen.", alertSaved: "Tuin opgeslagen!", feedback: "Feedback", sunlight: "Zonlicht", watering: "Water geven", illnesses: "Ziekten", calendar: "Plantkalender", greenhouse: "Kas", outside: "Buiten", atHome: "Binnen", resetView: "Reset Beeld", adPlaceholder: "Google Ad Placeholder", jan: "Jan", feb: "Mrt", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
+      harvestRegistration: "Oogst Registratie", harvestDiary: "Oogst Dagboek", harvest: "Oogst", weight: "Gewicht", expectedHarvest: "Verw. Oogst/Plant", promptWeight: "Voer oogstgewicht in (gram/stuks):", noHarvests: "Nog geen oogsten geregistreerd.", confirmDeleteOne: "Wilt u deze verwijderen?", confirmDeleteAll: "Wilt u alles verwijderen?",
+      today: "Vandaag", vandaag: "Vandaag", todayHeader: "Vandaag - ", readyToHarvest: "Klaar om te Oogsten", wateringList: "Water Geven", comingSoon: "Binnenkort", harvestReadyDesc: "klaar voor de oogst", harvestableIn: "oogstbaar over", days: "dagen", emptyGardenTasks: "Je tuin is leeg. Voeg planten toe via 'Bouw/wijzig je Tuin' om hier taken te zien.", promptCustomName: "Voer de naam in voor uw plant:",
+      // 50 Vegetables
+      potato: "Aardappel", tomato: "Tomaat", lettuce: "Sla", carrot: "Wortel", onion: "Ui", courgette: "Courgette", cucumber: "Komkommer", spinach: "Spinazie", "green-bean": "Sperzieboon", pod: "Peul", pea: "Doperwt", "runner-bean": "Snijboon", leek: "Prei", kohlrabi: "Kohlrabi", radish: "Radijs", beetroot: "Rode biet", endive: "Andijvie", kale: "Boerenkool", "white-cabbage": "Witte kool", "red-cabbage": "Rode kool", "savoy-cabbage": "Savooiekool", cauliflower: "Bloemkool", broccoli: "Broccoli", "brussels-sprout": "Spruitkool", "chinese-cabbage": "Chinese kool", "pak-choi": "Paksoi", chard: "Snijbiet", celeriac: "Knolselderij", celery: "Selderij", fennel: "Venkel", parsnip: "Pastinaak", "turnip-greens": "Raapsteel", arugula: "Rucola", "lambs-lettuce": "Veldsla", "iceberg-lettuce": "IJsbergsla", "romaine-lettuce": "Bindsla", "little-gem": "Little Gem", "bell-pepper": "Paprika", "chili-pepper": "Pepers", eggplant: "Aubergine", pumpkin: "Pompoen", pattypan: "Patisson", corn: "Maïs", garlic: "Knoflook", shallot: "Sjalot", "spring-onion": "Lente-ui", "winter-radish": "Rammenas", "may-turnip": "Meiraap", salsify: "Schorseneer", "bulb-fennel": "Knolvenkel", custom: "Eigen Plant",
+      // Veg Info Generic
+      "Partial Shade": "Halfschaduw", "Full Sun": "Volle zon", "Daily": "Dagelijks", "2-3 keer/week": "2-3 keer/week", "Regularly": "Regelmatig", "Moderate": "Gemiddeld", "Low": "Laag", "High": "Veel"
     }
   };
 
-  window.currentLang = 'en'; // Default
+  window.currentLang = 'en';
 
   window.setLanguage = function(lang, saveToCloud = true) {
     window.currentLang = lang;
     document.documentElement.lang = lang;
-    
-    if (saveToCloud && window.saveLanguageToFirebase) {
-      window.saveLanguageToFirebase(lang);
-    }
-    
+    if (saveToCloud && window.saveLanguageToFirebase) window.saveLanguageToFirebase(lang);
     updateUI();
   };
 
@@ -497,27 +366,22 @@
   function updateUI() {
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
-      if (el.tagName === 'INPUT') {
-        el.placeholder = getI18n(key);
-      } else {
-        el.innerText = getI18n(key);
-      }
+      if (el.tagName === 'INPUT') el.placeholder = getI18n(key);
+      else el.innerText = getI18n(key);
     });
 
     const gTitle = document.getElementById('gardenTitle');
     if(gTitle && gTitle.getAttribute('data-key')) gTitle.innerText = getI18n(gTitle.getAttribute('data-key'));
 
     const zBadge = document.getElementById('zoomBadge');
-    if (zBadge) {
-      const currentScale = window.scale || 0.8;
-      zBadge.innerText = `${getI18n('zoom')}: ${Math.round(currentScale * 100)}%`;
-    }
+    if (zBadge) zBadge.innerText = `${getI18n('zoom')}: ${Math.round((window.scale || 0.8) * 100)}%`;
 
     document.querySelectorAll('.garden-veg-container').forEach(el => {
       const type = el.dataset.type;
       const labelSpan = el.querySelector('span');
       if (labelSpan && type) {
-        labelSpan.innerText = getI18n(type);
+        if (type === 'custom' && el.dataset.customName) labelSpan.innerText = el.dataset.customName;
+        else labelSpan.innerText = getI18n(type);
       }
     });
 
@@ -533,11 +397,11 @@
       }
     }
 
-    if(!document.getElementById('libraryScreen').classList.contains('hidden')) { window.populateLibrary(); }
-    if(!document.getElementById('harvestScreen').classList.contains('hidden')) { window.populateHarvestDiary(); }
-    if(!document.getElementById('todayScreen').classList.contains('hidden')) { window.populateTodayScreen(); }
-    if(!document.getElementById('vegSubMenu').classList.contains('hidden')) { window.populateVegMenu(); }
-    if(!document.getElementById('vegDetailScreen').classList.contains('hidden')) { window.calculateHarvestDate(); }
+    if(!document.getElementById('libraryScreen').classList.contains('hidden')) window.populateLibrary();
+    if(!document.getElementById('harvestScreen').classList.contains('hidden')) window.populateHarvestDiary();
+    if(!document.getElementById('todayScreen').classList.contains('hidden')) window.populateTodayScreen();
+    if(!document.getElementById('vegSubMenu').classList.contains('hidden')) window.populateVegMenu();
+    if(!document.getElementById('vegDetailScreen').classList.contains('hidden')) window.calculateHarvestDate();
   }
 </script>
 <!-- END: Translation Data & Logic -->
@@ -612,9 +476,7 @@
 <div class="flex items-center gap-4 border-b border-neutral-100 pb-4 mb-4">
 <h2 class="text-2xl font-bold text-neutral-900" id="todayHeader">Today</h2>
 </div>
-<div class="flex-1 overflow-y-auto space-y-6 pr-1" id="todayContent">
-<!-- Dynamic sections will be injected here -->
-</div>
+<div class="flex-1 overflow-y-auto space-y-6 pr-1" id="todayContent"></div>
 <div class="mt-4">
 <button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
 </div>
@@ -649,9 +511,7 @@
 <div class="flex items-center gap-4 border-b border-neutral-100 pb-4 mb-4">
 <h2 class="text-2xl font-bold text-neutral-900" data-i18n="vegLibrary" id="libraryTitle">Vegetables Library</h2>
 </div>
-<div class="flex-1 overflow-y-auto space-y-3 pr-1" id="libraryList">
-<!-- Library items will be injected here -->
-</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1" id="libraryList"></div>
 <div class="mt-4">
 <button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" id="libraryBackBtn" onclick="showScreen('gardenScreen')">Back</button>
 </div>
@@ -663,9 +523,7 @@
 <h2 class="text-2xl font-bold text-neutral-900" data-i18n="harvestDiary" id="harvestTitle">Harvest Diary</h2>
 <button class="bg-red-50 text-red-500 text-[10px] font-bold px-3 py-2 rounded-lg border border-red-100 uppercase tracking-widest active:bg-red-500 active:text-white transition-all" data-i18n="removeAll" id="removeAllHarvestsBtn" onclick="confirmRemoveAllHarvests(event)">Remove All</button>
 </div>
-<div class="flex-1 overflow-y-auto space-y-3 pr-1" id="harvestList">
-<!-- Harvest entries will be injected here -->
-</div>
+<div class="flex-1 overflow-y-auto space-y-3 pr-1" id="harvestList"></div>
 <div class="mt-4">
 <button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
 </div>
@@ -729,72 +587,122 @@
 <!-- END: Hamburger Menu Overlay -->
 <!-- BEGIN: Vegetable SVG Templates -->
 <div class="hidden" id="veg-templates">
-<div id="tmpl-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M220 180C140 160 100 240 120 320C140 400 220 420 280 390C340 360 400 300 380 220Z" fill="#4CAF50"></path><path d="M180 120C260 80 320 120 360 180" fill="none" stroke="#81C784" stroke-width="12"></path></svg></div>
-<div id="tmpl-carrot"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M150 400L340 210C370 180 370 130 340 100L40 290Z" fill="#FF9800"></path><path d="M340 140L390 90" fill="none" stroke="#4CAF50" stroke-width="16"></path></svg></div>
+<div id="tmpl-potato"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#8D6E63" rx="140" ry="100"></ellipse><circle cx="220" cy="240" fill="#6D4C41" r="5"></circle></svg></div>
 <div id="tmpl-tomato"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="276" fill="#F44336" r="160"></circle><path d="M256 116L210 80L256 126Z" fill="#4CAF50"></path></svg></div>
-<div id="tmpl-beans"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M120 120Q200 80 380 380Q240 320 120 120Z" fill="#2E7D32"></path><circle cx="200" cy="190" fill="#81C784" r="22"></circle></svg></div>
-<div id="tmpl-beet"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="300" fill="#880E4F" r="130"></circle><path d="M256 170Q220 50 210 40Z" fill="#4CAF50"></path></svg></div>
+<div id="tmpl-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M220 180C140 160 100 240 120 320C140 400 220 420 280 390C340 360 400 300 380 220Z" fill="#4CAF50"></path></svg></div>
+<div id="tmpl-carrot"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M150 400L340 210C370 180 370 130 340 100L40 290Z" fill="#FF9800"></path></svg></div>
 <div id="tmpl-onion"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 120C160 220 140 380 256 400C372 380 352 220 256 120Z" fill="#A1887F"></path></svg></div>
-<div id="tmpl-aubergine"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 150Q160 300 240 420Q340 420 320 250Z" fill="#4A148C"></path></svg></div>
-<div id="tmpl-cucumber"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#1B5E20" height="100" rx="50" transform="rotate(-30 260 250)" width="220" x="150" y="200"></rect></svg></div>
-<div id="tmpl-pepper"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M180 160C140 200 140 360 256 400C372 200 372 200 332 160Z" fill="#FFB300"></path></svg></div>
 <div id="tmpl-courgette"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#2E7D32" height="90" rx="45" transform="rotate(-15 260 255)" width="240" x="140" y="210"></rect></svg></div>
-<div id="tmpl-cauliflower"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="270" fill="#E0E0E0" r="100"></circle><path d="M140 270Q180 160 256 200Z" fill="#4CAF50"></path></svg></div>
-<div id="tmpl-broccoli"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="210" cy="220" fill="#2E7D32" r="70"></circle><circle cx="302" cy="220" fill="#2E7D32" r="70"></circle><circle cx="256" cy="160" fill="#4CAF50" r="75"></circle><path d="M256 260V380" fill="none" stroke="#81C784" stroke-width="24"></path></svg></div>
-<div id="tmpl-red-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#6A1B9A" r="150"></circle><path d="M256 106C200 106 156 150 156 206" fill="none" stroke="#BA68C8" stroke-width="15"></path></svg></div>
-<div id="tmpl-garlic"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 150C180 150 140 280 256 400C372 280 332 150 256 150Z" fill="#F5F5F5"></path><path d="M256 150V100" fill="none" stroke="#4CAF50" stroke-width="12"></path></svg></div>
+<div id="tmpl-cucumber"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#1B5E20" height="100" rx="50" transform="rotate(-30 260 250)" width="220" x="150" y="200"></rect></svg></div>
+<div id="tmpl-spinach"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 350Q150 250 256 150Q362 250 312 350Z" fill="#2E7D32"></path></svg></div>
+<div id="tmpl-green-bean"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M150 150Q250 100 350 350" fill="none" stroke="#4CAF50" stroke-linecap="round" stroke-width="25"></path></svg></div>
+<div id="tmpl-pod"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M100 200Q256 100 412 200Q256 300 100 200Z" fill="#388E3C"></path></svg></div>
+<div id="tmpl-pea"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#4CAF50" r="80"></circle></svg></div>
+<div id="tmpl-runner-bean"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M120 120L392 392" fill="none" stroke="#2E7D32" stroke-linecap="round" stroke-width="20"></path></svg></div>
+<div id="tmpl-leek"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#F5F5F5" height="150" width="40" x="236" y="250"></rect><rect fill="#4CAF50" height="150" width="40" x="236" y="100"></rect></svg></div>
+<div id="tmpl-kohlrabi"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="300" fill="#C8E6C9" r="100"></circle><path d="M256 200V100" stroke="#4CAF50" stroke-width="15"></path></svg></div>
+<div id="tmpl-radish"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#E91E63" r="80"></circle><path d="M256 270V150" stroke="#4CAF50" stroke-width="20"></path></svg></div>
+<div id="tmpl-beetroot"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="300" fill="#880E4F" r="120"></circle></svg></div>
+<div id="tmpl-endive"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M150 350Q256 100 362 350Z" fill="#8BC34A"></path></svg></div>
+<div id="tmpl-kale"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 400Q150 200 256 100Q362 200 312 400Z" fill="#1B5E20"></path></svg></div>
+<div id="tmpl-white-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#F5F5F5" r="150"></circle></svg></div>
+<div id="tmpl-red-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#6A1B9A" r="150"></circle></svg></div>
+<div id="tmpl-savoy-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#388E3C" r="150"></circle></svg></div>
+<div id="tmpl-cauliflower"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="270" fill="#E0E0E0" r="100"></circle></svg></div>
+<div id="tmpl-broccoli"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="220" fill="#2E7D32" r="90"></circle></svg></div>
+<div id="tmpl-brussels-sprout"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#4CAF50" r="60"></circle></svg></div>
+<div id="tmpl-chinese-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#DCEDC8" rx="100" ry="160"></ellipse></svg></div>
+<div id="tmpl-pak-choi"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400Q150 350 200 150Q256 100 312 150Q362 350 256 400Z" fill="#F5F5F5"></path><path d="M256 250Q200 200 256 100Q312 200 256 250Z" fill="#1B5E20"></path></svg></div>
+<div id="tmpl-chard"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 450V100" stroke="#F44336" stroke-width="15"></path><path d="M150 300Q256 50 362 300Z" fill="#4CAF50"></path></svg></div>
+<div id="tmpl-celeriac"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#D7CCC8" r="120"></circle></svg></div>
+<div id="tmpl-celery"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#8BC34A" height="300" width="60" x="226" y="100"></rect></svg></div>
+<div id="tmpl-fennel"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="380" fill="#F1F8E9" r="100"></circle></svg></div>
+<div id="tmpl-parsnip"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 100L256 450L312 100Z" fill="#FFF9C4"></path></svg></div>
+<div id="tmpl-turnip-greens"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 400Q256 100 312 400Z" fill="#4CAF50"></path></svg></div>
 <div id="tmpl-arugula"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400L220 150Q256 100 292 150Z" fill="#388E3C"></path></svg></div>
-<div id="tmpl-potato"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#8D6E63" rx="140" ry="100"></ellipse><circle cx="220" cy="240" fill="#6D4C41" r="5"></circle><circle cx="300" cy="280" fill="#6D4C41" r="5"></circle></svg></div>
-<div id="tmpl-corn"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#FFEB3B" height="180" rx="40" width="80" x="216" y="160"></rect><path d="M216 340Q160 280 216 160" fill="#4CAF50"></path></svg></div>
-<div id="tmpl-mint"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400L220 300Q140 280 160 180Q256 150 352 180Q372 280 292 300Z" fill="#00E676"></path></svg></div>
-<div id="tmpl-dill"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400V150M256 300L200 250M256 250L312 200" fill="none" stroke="#4CAF50" stroke-width="10"></path></svg></div>
-<div id="tmpl-thyme"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400Q280 250 256 150" fill="none" stroke="#2E7D32" stroke-width="8"></path><circle cx="256" cy="200" fill="#4CAF50" r="10"></circle></svg></div>
-<div id="tmpl-chives"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M240 400L245 100M260 400L255 100M280 400L265 100" fill="none" stroke="#81C784" stroke-width="5"></path></svg></div>
-<div id="tmpl-basil"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400L210 280Q120 280 140 180Q256 140 372 180Q392 280 302 280Z" fill="#1B5E20"></path></svg></div>
+<div id="tmpl-lambs-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#4CAF50" r="70"></circle></svg></div>
+<div id="tmpl-iceberg-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#C5E1A5" r="140"></circle></svg></div>
+<div id="tmpl-romaine-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#388E3C" rx="100" ry="160"></ellipse></svg></div>
+<div id="tmpl-little-gem"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#8BC34A" rx="70" ry="120"></ellipse></svg></div>
+<div id="tmpl-bell-pepper"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M180 160C140 200 140 360 256 400C372 200 372 200 332 160Z" fill="#FFB300"></path></svg></div>
+<div id="tmpl-chili-pepper"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 100Q256 450 350 150" fill="none" stroke="#D32F2F" stroke-linecap="round" stroke-width="25"></path></svg></div>
+<div id="tmpl-eggplant"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 150Q160 300 240 420Q340 420 320 250Z" fill="#4A148C"></path></svg></div>
+<div id="tmpl-pumpkin"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="300" fill="#FF9800" r="150"></circle></svg></div>
+<div id="tmpl-pattypan"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="300" fill="#FFF176" rx="160" ry="80"></ellipse></svg></div>
+<div id="tmpl-corn"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#FFEB3B" height="180" rx="40" width="80" x="216" y="160"></rect></svg></div>
+<div id="tmpl-garlic"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 150C180 150 140 280 256 400C372 280 332 150 256 150Z" fill="#F5F5F5"></path></svg></div>
+<div id="tmpl-shallot"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="300" fill="#A1887F" rx="70" ry="100"></ellipse></svg></div>
+<div id="tmpl-spring-onion"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 450V100" stroke="#4CAF50" stroke-width="10"></path></svg></div>
+<div id="tmpl-winter-radish"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 100L256 450L312 100Z" fill="#F5F5F5"></path></svg></div>
+<div id="tmpl-may-turnip"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#F1F8E9" r="100"></circle></svg></div>
+<div id="tmpl-salsify"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#5D4037" height="300" width="20" x="246" y="100"></rect></svg></div>
+<div id="tmpl-bulb-fennel"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#DCEDC8" r="100"></circle></svg></div>
+<div id="tmpl-custom"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#4CAF50" height="200" rx="40" width="200" x="156" y="156"></rect><path d="M256 200V312M200 256H312" stroke="white" stroke-linecap="round" stroke-width="30"></path></svg></div>
 </div>
 <!-- END: Vegetable SVG Templates -->
 <!-- BEGIN: Application Scripts -->
 <script data-purpose="app-logic">
-    // --- Global State ---
     window.scale = 0.8;
-    let translateX = 0;
-    let translateY = 0;
-    
-    let activeMode = 'drag'; 
-    let selectedVegType = null;
+    let translateX = 0, translateY = 0, activeMode = 'drag', selectedVegType = null;
     window.isBuildingModeActive = false;
-    let currentSelectedElement = null; 
-    let currentTargetVegElement = null; 
-    let gardenBackup = '';
+    let currentSelectedElement = null, currentTargetVegElement = null, gardenBackup = '';
     window.userHarvests = [];
 
     const vegLibraryData = [
-      { id: 'lettuce', nameKey: 'lettuce', growTime: 45, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs, Downy Mildew', expectedHarvest: '250g', calendar: { greenhouse: [2,3], outside: [4,5,6,7,8], home: [1,2] } },
-      { id: 'carrot', nameKey: 'carrot', growTime: 75, sun: 'Full Sun', water: '2-3 times/week', illnesses: 'Carrot Fly, Root Rot', expectedHarvest: '80g', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [2,3] } },
-      { id: 'tomato', nameKey: 'tomato', growTime: 80, sun: 'Full Sun', water: 'Daily', illnesses: 'Blight, Blossom End Rot', expectedHarvest: '3kg', calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] } },
-      { id: 'beans', nameKey: 'beans', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids, Bean Rust', expectedHarvest: '400g', calendar: { greenhouse: [4,5], outside: [5,6,7], home: [4] } },
-      { id: 'beet', nameKey: 'beet', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot, Beet Fly', expectedHarvest: '150g', calendar: { greenhouse: [3,4], outside: [4,5,6,7], home: [3] } },
-      { id: 'onion', nameKey: 'onion', growTime: 120, sun: 'Full Sun', water: 'Low', illnesses: 'Downy Mildew, Onion Fly', expectedHarvest: '100g', calendar: { greenhouse: [2,3], outside: [3,4], home: [1,2] } },
-      { id: 'aubergine', nameKey: 'aubergine', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Spider Mites, Verticillium Wilt', expectedHarvest: '1.5kg', calendar: { greenhouse: [2,3], outside: [6], home: [1,2] } },
-      { id: 'cucumber', nameKey: 'cucumber', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Powdery Mildew, Mosaic Virus', expectedHarvest: '2kg', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
-      { id: 'pepper', nameKey: 'pepper', growTime: 85, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids, Leaf Spot', expectedHarvest: '1kg', calendar: { greenhouse: [2,3,4], outside: [6], home: [1,2,3] } },
-      { id: 'courgette', nameKey: 'courgette', growTime: 55, sun: 'Full Sun', water: 'High', illnesses: 'Powdery Mildew, Slugs', expectedHarvest: '4kg', calendar: { greenhouse: [4,5], outside: [5,6], home: [3,4] } },
-      { id: 'cauliflower', nameKey: 'cauliflower', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Cabbage White', expectedHarvest: '800g', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
-      { id: 'broccoli', nameKey: 'broccoli', growTime: 80, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot, Aphids', expectedHarvest: '600g', calendar: { greenhouse: [2,3], outside: [4,5,6], home: [1,2] } },
-      { id: 'red-cabbage', nameKey: 'red-cabbage', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Cabbage Loopers', expectedHarvest: '1.5kg', calendar: { greenhouse: [3], outside: [4,5,6], home: [2] } },
-      { id: 'garlic', nameKey: 'garlic', growTime: 240, sun: 'Full Sun', water: 'Low', illnesses: 'Rust, White Rot', expectedHarvest: '50g', calendar: { greenhouse: [], outside: [10,11], home: [] } },
-      { id: 'arugula', nameKey: 'arugula', growTime: 30, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '100g', calendar: { greenhouse: [2,3,9,10], outside: [4,5,6,7,8], home: [1,11,12] } },
-      { id: 'potato', nameKey: 'potato', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Blight, Scab', expectedHarvest: '1kg', calendar: { greenhouse: [], outside: [3,4,5], home: [] } },
-      { id: 'corn', nameKey: 'corn', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Smut, Earworm', expectedHarvest: '2 units', calendar: { greenhouse: [4], outside: [5,6], home: [] } },
-      { id: 'mint', nameKey: 'mint', growTime: 60, sun: 'Partial Shade', water: 'High', illnesses: 'Rust', expectedHarvest: '100g', calendar: { greenhouse: [3], outside: [4,5,6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
-      { id: 'dill', nameKey: 'dill', growTime: 40, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '50g', calendar: { greenhouse: [3], outside: [4,5,6,7], home: [3,4] } },
-      { id: 'thyme', nameKey: 'thyme', growTime: 90, sun: 'Full Sun', water: 'Low', illnesses: 'Root Rot', expectedHarvest: '30g', calendar: { greenhouse: [3], outside: [4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
-      { id: 'chives', nameKey: 'chives', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', expectedHarvest: '50g', calendar: { greenhouse: [2,3], outside: [3,4,5], home: [1,2,3,4,5,6,7,8,9,10,11,12] } },
-      { id: 'basil', nameKey: 'basil', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Fusarium Wilt, Slugs', expectedHarvest: '150g', calendar: { greenhouse: [4,5], outside: [6], home: [1,2,3,4,5,6,7,8,9,10,11,12] } }
-    ];
+      { id: 'potato', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Blight, Scab', expectedHarvest: '1kg' },
+      { id: 'tomato', growTime: 80, sun: 'Full Sun', water: 'Daily', illnesses: 'Blight', expectedHarvest: '3kg' },
+      { id: 'lettuce', growTime: 45, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '250g' },
+      { id: 'carrot', growTime: 75, sun: 'Full Sun', water: '2-3 times/week', illnesses: 'Carrot Fly', expectedHarvest: '80g' },
+      { id: 'onion', growTime: 120, sun: 'Full Sun', water: 'Low', illnesses: 'Mildew', expectedHarvest: '100g' },
+      { id: 'courgette', growTime: 55, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', expectedHarvest: '4kg' },
+      { id: 'cucumber', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Mildew', expectedHarvest: '2kg' },
+      { id: 'spinach', growTime: 40, sun: 'Partial Shade', water: 'Daily', illnesses: 'Aphids', expectedHarvest: '200g' },
+      { id: 'green-bean', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '400g' },
+      { id: 'pod', growTime: 65, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '300g' },
+      { id: 'pea', growTime: 70, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '200g' },
+      { id: 'runner-bean', growTime: 70, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '500g' },
+      { id: 'leek', growTime: 150, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', expectedHarvest: '300g' },
+      { id: 'kohlrabi', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Clubroot', expectedHarvest: '400g' },
+      { id: 'radish', growTime: 30, sun: 'Full Sun', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '20g' },
+      { id: 'beetroot', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', expectedHarvest: '150g' },
+      { id: 'endive', growTime: 80, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '300g' },
+      { id: 'kale', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '500g' },
+      { id: 'white-cabbage', growTime: 120, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', expectedHarvest: '1.5kg' },
+      { id: 'red-cabbage', growTime: 130, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', expectedHarvest: '1.5kg' },
+      { id: 'savoy-cabbage', growTime: 140, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', expectedHarvest: '1.5kg' },
+      { id: 'cauliflower', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot', expectedHarvest: '800g' },
+      { id: 'broccoli', growTime: 80, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot', expectedHarvest: '600g' },
+      { id: 'brussels-sprout', growTime: 160, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '800g' },
+      { id: 'chinese-cabbage', growTime: 70, sun: 'Full Sun', water: 'Moderate', illnesses: 'Slugs', expectedHarvest: '1kg' },
+      { id: 'pak-choi', growTime: 50, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '400g' },
+      { id: 'chard', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '500g' },
+      { id: 'celeriac', growTime: 180, sun: 'Full Sun', water: 'High', illnesses: 'Leaf Spot', expectedHarvest: '800g' },
+      { id: 'celery', growTime: 120, sun: 'Full Sun', water: 'High', illnesses: 'Aphids', expectedHarvest: '600g' },
+      { id: 'fennel', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '400g' },
+      { id: 'parsnip', growTime: 150, sun: 'Full Sun', water: 'Moderate', illnesses: 'Canker', expectedHarvest: '200g' },
+      { id: 'turnip-greens', growTime: 40, sun: 'Partial Shade', water: 'Daily', illnesses: 'Mildew', expectedHarvest: '300g' },
+      { id: 'arugula', growTime: 30, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '100g' },
+      { id: 'lambs-lettuce', growTime: 60, sun: 'Partial Shade', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '150g' },
+      { id: 'iceberg-lettuce', growTime: 70, sun: 'Full Sun', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '400g' },
+      { id: 'romaine-lettuce', growTime: 75, sun: 'Full Sun', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '500g' },
+      { id: 'little-gem', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '200g' },
+      { id: 'bell-pepper', growTime: 85, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids', expectedHarvest: '1kg' },
+      { id: 'chili-pepper', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '200g' },
+      { id: 'eggplant', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Spider Mites', expectedHarvest: '1.5kg' },
+      { id: 'pumpkin', growTime: 110, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', expectedHarvest: '5kg' },
+      { id: 'pattypan', growTime: 60, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', expectedHarvest: '2kg' },
+      { id: 'corn', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Smut', expectedHarvest: '2 units' },
+      { id: 'garlic', growTime: 240, sun: 'Full Sun', water: 'Low', illnesses: 'Rust', expectedHarvest: '50g' },
+      { id: 'shallot', growTime: 110, sun: 'Full Sun', water: 'Low', illnesses: 'Mildew', expectedHarvest: '50g' },
+      { id: 'spring-onion', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Thrips', expectedHarvest: '100g' },
+      { id: 'winter-radish', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Flea Beetles', expectedHarvest: '300g' },
+      { id: 'may-turnip', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Flea Beetles', expectedHarvest: '200g' },
+      { id: 'salsify', growTime: 180, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '150g' },
+      { id: 'bulb-fennel', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '400g' },
+      { id: 'custom', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'General', expectedHarvest: 'N/A' }
+    ].map(v => ({ ...v, calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] } }));
 
-    const workspace = document.getElementById('canvasWorkspace');
-    const container = document.getElementById('canvasContainer');
+    const workspace = document.getElementById('canvasWorkspace'), container = document.getElementById('canvasContainer');
 
     window.showScreen = function(screenId) {
       document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
@@ -806,25 +714,14 @@
     };
 
     window.setAuthMode = function(mode) {
-      const regField = document.getElementById('registerFieldContainer');
-      const loginActions = document.getElementById('loginModeActions');
-      const registerActions = document.getElementById('registerModeActions');
-      
-      if(mode === 'register') {
-        regField.classList.remove('hidden');
-        loginActions.classList.add('hidden');
-        registerActions.classList.remove('hidden');
-      } else {
-        regField.classList.add('hidden');
-        loginActions.classList.remove('hidden');
-        registerActions.classList.add('hidden');
-      }
+      const regField = document.getElementById('registerFieldContainer'), loginActions = document.getElementById('loginModeActions'), registerActions = document.getElementById('registerModeActions');
+      if(mode === 'register') { regField.classList.remove('hidden'); loginActions.classList.add('hidden'); registerActions.classList.remove('hidden'); }
+      else { regField.classList.add('hidden'); loginActions.classList.remove('hidden'); registerActions.classList.add('hidden'); }
     };
 
     window.toggleMenu = function(open) {
       const menu = document.getElementById('hamburgerMenu');
-      if (open) menu.classList.remove('hidden');
-      else menu.classList.add('hidden');
+      if (open) menu.classList.remove('hidden'); else menu.classList.add('hidden');
     };
 
     window.selectMenuOption = function(key) {
@@ -833,19 +730,10 @@
       if(key === 'vegLibrary') { showScreen('libraryScreen'); return; }
       if(key === 'harvestRegistration') { showScreen('harvestScreen'); return; }
       if(key === 'today') { showScreen('todayScreen'); return; }
-      
       const gTitle = document.getElementById('gardenTitle');
       gTitle.setAttribute('data-key', key);
       gTitle.innerText = window.getI18n(key);
-
-      if (key === 'buildGarden') unlockGarden();
-      else lockGarden();
-    };
-
-    window.sendFeedback = function() {
-      const email = 'MyVeggie@hotmail.com';
-      const subject = encodeURIComponent('Feedback for MyVeggie App');
-      window.location.href = `mailto:${email}?subject=${subject}`;
+      if (key === 'buildGarden') unlockGarden(); else lockGarden();
     };
 
     function lockGarden() {
@@ -853,8 +741,7 @@
       container.classList.remove('is-building');
       document.getElementById('buildControls').classList.add('hidden');
       document.getElementById('vegSubMenu').classList.add('hidden');
-      clearSelection();
-      setMode('drag');
+      clearSelection(); setMode('drag');
     }
 
     function unlockGarden() {
@@ -862,309 +749,128 @@
       container.classList.add('is-building');
       document.getElementById('buildControls').classList.remove('hidden');
       gardenBackup = workspace.innerHTML;
-      setMode('drag');
-      window.populateVegMenu();
+      setMode('drag'); window.populateVegMenu();
     }
 
     function setMode(mode) {
       activeMode = mode;
       document.getElementById('vegSubMenu').classList.add('hidden');
-      
       ['addBtn', 'addVegBtn', 'removeBtn', 'duplicateBtn'].forEach(id => {
         const btn = document.getElementById(id);
         if(btn) btn.className = "bg-white border border-neutral-200 text-neutral-900 font-bold py-4 rounded-xl text-[9px] uppercase tracking-wider transition-all";
       });
-
-      if (mode === 'add') {
-        document.getElementById('addBtn').classList.replace('border-neutral-200', 'border-bladgroen');
-        document.getElementById('addBtn').classList.add('text-bladgroen');
-      } else if (mode === 'veg-menu') {
-        document.getElementById('addVegBtn').classList.replace('border-neutral-200', 'border-bladgroen');
-        document.getElementById('addVegBtn').classList.add('text-bladgroen');
-        document.getElementById('vegSubMenu').classList.remove('hidden');
-      } else if (mode === 'remove') {
-        document.getElementById('removeBtn').classList.replace('border-neutral-200', 'border-red-500');
-        document.getElementById('removeBtn').classList.add('text-red-500');
-        clearSelection();
-      }
+      if (mode === 'add') { document.getElementById('addBtn').classList.replace('border-neutral-200', 'border-bladgroen'); document.getElementById('addBtn').classList.add('text-bladgroen'); }
+      else if (mode === 'veg-menu') { document.getElementById('addVegBtn').classList.replace('border-neutral-200', 'border-bladgroen'); document.getElementById('addVegBtn').classList.add('text-bladgroen'); document.getElementById('vegSubMenu').classList.remove('hidden'); }
+      else if (mode === 'remove') { document.getElementById('removeBtn').classList.replace('border-neutral-200', 'border-red-500'); document.getElementById('removeBtn').classList.add('text-red-500'); clearSelection(); }
     }
 
     window.duplicateSelectedLine = function() {
-      if (!currentSelectedElement || !currentSelectedElement.classList.contains('garden-line-container')) {
-        alert("Select a line to duplicate first.");
-        return;
-      }
-      
+      if (!currentSelectedElement || !currentSelectedElement.classList.contains('garden-line-container')) { alert("Select a line to duplicate first."); return; }
       const original = currentSelectedElement;
-      const x = parseInt(original.style.left) + 20;
-      const y = parseInt(original.style.top) + 20;
-      const rot = original.dataset.rotation || 0;
-      const width = original.querySelector('.garden-line').style.width;
-
+      const x = parseInt(original.style.left) + 20, y = parseInt(original.style.top) + 20, rot = original.dataset.rotation || 0, width = original.querySelector('.garden-line').style.width;
       const containerDiv = document.createElement('div');
       containerDiv.className = 'garden-line-container';
-      containerDiv.style.left = `${x}px`;
-      containerDiv.style.top = `${y}px`;
-      containerDiv.dataset.rotation = rot;
-      containerDiv.style.transform = `rotate(${rot}deg)`;
-
+      containerDiv.style.left = `${x}px`; containerDiv.style.top = `${y}px`;
+      containerDiv.dataset.rotation = rot; containerDiv.style.transform = `rotate(${rot}deg)`;
       const lineDiv = document.createElement('div');
-      lineDiv.className = 'garden-line';
-      lineDiv.style.width = width;
-
+      lineDiv.className = 'garden-line'; lineDiv.style.width = width;
       const handleDiv = document.createElement('div');
       handleDiv.className = 'stretch-handle';
-
-      containerDiv.appendChild(lineDiv);
-      containerDiv.appendChild(handleDiv);
+      containerDiv.appendChild(lineDiv); containerDiv.appendChild(handleDiv);
       workspace.appendChild(containerDiv);
-
       window.makeLineInteractive(containerDiv, lineDiv);
-      clearSelection();
-      currentSelectedElement = containerDiv;
-      currentSelectedElement.classList.add('is-selected');
+      clearSelection(); currentSelectedElement = containerDiv; currentSelectedElement.classList.add('is-selected');
     };
 
     window.populateVegMenu = function() {
-      const menu = document.getElementById('vegSubMenu');
-      menu.innerHTML = '';
+      const menu = document.getElementById('vegSubMenu'); menu.innerHTML = '';
       vegLibraryData.forEach(veg => {
         const btn = document.createElement('button');
         btn.onclick = () => selectVeg(veg.id);
         btn.className = "flex flex-col items-center gap-1 p-3 rounded-xl bg-white border border-neutral-100 hover:border-bladgroen transition-colors shadow-sm";
-        const label = window.getI18n(veg.id);
-        // Shrink template preview for menu
-        btn.innerHTML = `<div class="scale-50 h-10 flex items-center justify-center">${document.getElementById('tmpl-'+veg.id).innerHTML}</div><span class="text-[9px] truncate w-full text-center text-neutral-500 font-medium">${label}</span>`;
+        btn.innerHTML = `<div class="scale-50 h-10 flex items-center justify-center">${document.getElementById('tmpl-'+veg.id).innerHTML}</div><span class="text-[9px] truncate w-full text-center text-neutral-500 font-medium">${window.getI18n(veg.id)}</span>`;
         menu.appendChild(btn);
       });
     };
 
     window.populateTodayScreen = function() {
-      const content = document.getElementById('todayContent');
-      const header = document.getElementById('todayHeader');
+      const content = document.getElementById('todayContent'), header = document.getElementById('todayHeader');
       content.innerHTML = '';
-      
-      const now = new Date();
-      now.setHours(0,0,0,0);
-      const options = { day: 'numeric', month: 'long' };
-      header.innerText = window.getI18n('todayHeader') + now.toLocaleDateString(window.currentLang === 'nl' ? 'nl-NL' : 'en-GB', options);
-
-      const readyHarvest = [];
-      const waterNeed = [];
-      const soonHarvest = [];
-
+      const now = new Date(); now.setHours(0,0,0,0);
+      header.innerText = window.getI18n('todayHeader') + now.toLocaleDateString(window.currentLang === 'nl' ? 'nl-NL' : 'en-GB', { day: 'numeric', month: 'long' });
+      const readyHarvest = [], waterNeed = [], soonHarvest = [];
       const gardenItems = workspace.querySelectorAll('.garden-veg-container');
-      
       if (gardenItems.length === 0) {
-        content.innerHTML = `<div class="flex flex-col items-center justify-center py-20 px-8 text-center space-y-4">
-          <div class="bg-neutral-50 p-6 rounded-full border border-neutral-100 shadow-sm">
-            <svg class="w-12 h-12 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332-4.5 1.253"></path></svg>
-          </div>
-          <p class="text-neutral-500 font-medium leading-relaxed">${window.getI18n('emptyGardenTasks')}</p>
-        </div>`;
+        content.innerHTML = `<div class="flex flex-col items-center justify-center py-20 px-8 text-center space-y-4"><div class="bg-neutral-50 p-6 rounded-full border border-neutral-100 shadow-sm"><svg class="w-12 h-12 text-neutral-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332-4.5 1.253"></path></svg></div><p class="text-neutral-500 font-medium leading-relaxed">${window.getI18n('emptyGardenTasks')}</p></div>`;
         return;
       }
-
       gardenItems.forEach(el => {
-        const type = el.dataset.type;
-        const plantedDateStr = el.dataset.plantedDate;
-        const growDays = parseInt(el.dataset.growDays);
-        
+        const type = el.dataset.type, plantedDateStr = el.dataset.plantedDate, growDays = parseInt(el.dataset.growDays), cName = el.dataset.customName;
         if (plantedDateStr && growDays) {
-          const plantedDate = new Date(plantedDateStr);
-          plantedDate.setHours(0,0,0,0);
-          const diffTime = now - plantedDate;
-          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-          const daysLeft = growDays - diffDays;
-          
-          if (daysLeft <= 0) {
-            readyHarvest.push({ type, label: `${window.getI18n(type)} ${window.getI18n('harvestReadyDesc')}` });
-          } else if (daysLeft <= 10) {
-            soonHarvest.push({ type, label: `${window.getI18n(type)} ${window.getI18n('harvestableIn')} ${daysLeft} ${window.getI18n('days')}` });
-          }
-          
+          const plantedDate = new Date(plantedDateStr); plantedDate.setHours(0,0,0,0);
+          const diffTime = now - plantedDate; const diffDays = Math.ceil(diffTime / 86400000), daysLeft = growDays - diffDays;
+          const displayLabel = type === 'custom' ? cName : window.getI18n(type);
+          if (daysLeft <= 0) readyHarvest.push({ type, label: `${displayLabel} ${window.getI18n('harvestReadyDesc')}` });
+          else if (daysLeft <= 10) soonHarvest.push({ type, label: `${displayLabel} ${window.getI18n('harvestableIn')} ${daysLeft} ${window.getI18n('days')}` });
           const vegInfo = vegLibraryData.find(v => v.id === type);
-          if (vegInfo && (vegInfo.water === 'Daily' || vegInfo.water === 'High')) {
-            waterNeed.push({ type, label: window.getI18n(type) });
-          }
+          if (vegInfo && (vegInfo.water === 'Daily' || vegInfo.water === 'High')) waterNeed.push({ type, label: displayLabel });
         }
       });
-
       const renderSection = (titleKey, icon, items) => {
         if (items.length === 0) return '';
-        let listHtml = items.map(item => `
-          <div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-xl shadow-sm mb-2">
-            <div class="shrink-0 scale-[0.4] w-10 h-10 flex items-center justify-center">${document.getElementById('tmpl-'+item.type).innerHTML}</div>
-            <span class="text-sm font-medium text-neutral-800">${item.label}</span>
-          </div>
-        `).join('');
-
-        return `
-          <section>
-            <div class="flex items-center gap-2 mb-3">
-              <span class="text-xl">${icon}</span>
-              <h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">${window.getI18n(titleKey)}</h3>
-            </div>
-            ${listHtml}
-          </section>
-        `;
+        let listHtml = items.map(item => `<div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-xl shadow-sm mb-2"><div class="shrink-0 scale-[0.4] w-10 h-10 flex items-center justify-center">${document.getElementById('tmpl-'+item.type).innerHTML}</div><span class="text-sm font-medium text-neutral-800">${item.label}</span></div>`).join('');
+        return `<section><div class="flex items-center gap-2 mb-3"><span class="text-xl">${icon}</span><h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">${window.getI18n(titleKey)}</h3></div>${listHtml}</section>`;
       };
-
-      let finalHtml = '';
-      finalHtml += renderSection('readyToHarvest', '🥕', readyHarvest);
-      finalHtml += renderSection('wateringList', '💧', waterNeed);
-      finalHtml += renderSection('comingSoon', '⏳', soonHarvest);
-
-      if (finalHtml === '') {
-        content.innerHTML = `<div class="text-center py-20 px-8">
-           <p class="text-neutral-400 font-medium">${window.getI18n('noTasksToday') || "No tasks for today."}</p>
-        </div>`;
-      } else {
-        content.innerHTML = finalHtml;
-      }
+      let finalHtml = renderSection('readyToHarvest', '🥕', readyHarvest) + renderSection('wateringList', '💧', waterNeed) + renderSection('comingSoon', '⏳', soonHarvest);
+      content.innerHTML = finalHtml || `<div class="text-center py-20 px-8"><p class="text-neutral-400 font-medium">No tasks for today.</p></div>`;
     };
 
     window.populateLibrary = function() {
-      const list = document.getElementById('libraryList');
-      list.innerHTML = '';
+      const list = document.getElementById('libraryList'); list.innerHTML = '';
       const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-      
-      const sortedData = [...vegLibraryData].sort((a, b) => {
-        return window.getI18n(a.id).localeCompare(window.getI18n(b.id));
-      });
-
+      const sortedData = [...vegLibraryData].sort((a, b) => window.getI18n(a.id).localeCompare(window.getI18n(b.id)));
       sortedData.forEach(veg => {
         const accordionItem = document.createElement('div');
         accordionItem.className = "library-accordion-item bg-neutral-50 border border-neutral-100 rounded-2xl overflow-hidden mb-3 shadow-sm";
-        
-        const renderRow = (label, value) => `
-          <div class="flex justify-between items-center text-sm py-1">
-            <span class="text-neutral-500 font-medium">${window.getI18n(label)}</span>
-            <span class="text-neutral-900 font-bold">${window.getI18n(value)}</span>
-          </div>
-        `;
-
+        const renderRow = (label, value) => `<div class="flex justify-between items-center text-sm py-1"><span class="text-neutral-500 font-medium">${window.getI18n(label)}</span><span class="text-neutral-900 font-bold">${window.getI18n(value)}</span></div>`;
         const renderCalRow = (labelKey, activeMonths) => {
-            let cells = '';
-            months.forEach((m, i) => {
-                const isActive = activeMonths.includes(i+1);
-                cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${isActive ? 'bg-bladgroen' : 'bg-neutral-200'}"></div>`;
-            });
-            let labels = '';
-            months.forEach((m, i) => {
-                labels += `<div class="w-full text-center text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">${window.getI18n(m)}</div>`;
-            });
-            return `
-              <div class="space-y-1.5 mb-4">
-                <span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span>
-                <div class="grid grid-cols-12 gap-1 mb-1">${cells}</div>
-                <div class="grid grid-cols-12 gap-1">${labels}</div>
-              </div>
-            `;
+            let cells = '', labels = '';
+            months.forEach((m, i) => { cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${activeMonths.includes(i+1) ? 'bg-bladgroen' : 'bg-neutral-200'}"></div>`; labels += `<div class="w-full text-center text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">${window.getI18n(m)}</div>`; });
+            return `<div class="space-y-1.5 mb-4"><span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span><div class="grid grid-cols-12 gap-1 mb-1">${cells}</div><div class="grid grid-cols-12 gap-1">${labels}</div></div>`;
         };
-
         accordionItem.innerHTML = `
           <button class="w-full flex items-center justify-between p-5 focus:outline-none bg-neutral-50 active:bg-neutral-100 transition-colors" onclick="this.parentElement.classList.toggle('active')">
-            <div class="flex items-center gap-4">
-              <div class="bg-white p-1 rounded-lg border border-neutral-100 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${document.getElementById('tmpl-'+veg.id).innerHTML}</div>
-              <h3 class="text-lg font-bold text-neutral-900">${window.getI18n(veg.id)}</h3>
-            </div>
+            <div class="flex items-center gap-4"><div class="bg-white p-1 rounded-lg border border-neutral-100 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${document.getElementById('tmpl-'+veg.id).innerHTML}</div><h3 class="text-lg font-bold text-neutral-900">${window.getI18n(veg.id)}</h3></div>
             <svg class="chevron-icon w-6 h-6 stroke-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
           </button>
-          <div class="library-accordion-content bg-white">
-            <div class="p-5 pt-2 space-y-5">
-              <div class="space-y-1 border-t border-neutral-100 pt-5">
-                ${renderRow('growDays', veg.growTime + ' days')}
-                ${renderRow('expectedHarvest', veg.expectedHarvest)}
-                ${renderRow('sunlight', veg.sun)}
-                ${renderRow('watering', veg.water)}
-                ${renderRow('illnesses', veg.illnesses)}
-              </div>
-              <div class="pt-3 border-t border-neutral-100 space-y-4">
-                <h4 class="text-xs font-bold text-bladgroen uppercase tracking-widest border-b border-bladgroen/10 pb-2">${window.getI18n('calendar')}</h4>
-                ${renderCalRow('greenhouse', veg.calendar.greenhouse)}
-                ${renderCalRow('outside', veg.calendar.outside)}
-                ${renderCalRow('atHome', veg.calendar.home)}
-              </div>
-            </div>
-          </div>
-        `;
+          <div class="library-accordion-content bg-white"><div class="p-5 pt-2 space-y-5"><div class="space-y-1 border-t border-neutral-100 pt-5">${renderRow('growDays', veg.growTime + ' days')}${renderRow('expectedHarvest', veg.expectedHarvest)}${renderRow('sunlight', veg.sun)}${renderRow('watering', veg.water)}${renderRow('illnesses', veg.illnesses)}</div><div class="pt-3 border-t border-neutral-100 space-y-4"><h4 class="text-xs font-bold text-bladgroen uppercase tracking-widest border-b border-bladgroen/10 pb-2">${window.getI18n('calendar')}</h4>${renderCalRow('greenhouse', veg.calendar.greenhouse)}${renderCalRow('outside', veg.calendar.outside)}${renderCalRow('atHome', veg.calendar.home)}</div></div></div>`;
         list.appendChild(accordionItem);
       });
     };
 
     window.populateHarvestDiary = function() {
-      const list = document.getElementById('harvestList');
-      list.innerHTML = '';
-      if (!window.userHarvests || window.userHarvests.length === 0) {
-        list.innerHTML = `<div class="text-center py-10 text-neutral-400 font-medium">${window.getI18n('noHarvests')}</div>`;
-        return;
-      }
-      
-      const sortedHarvests = [...window.userHarvests].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      sortedHarvests.forEach(h => {
+      const list = document.getElementById('harvestList'); list.innerHTML = '';
+      if (!window.userHarvests || window.userHarvests.length === 0) { list.innerHTML = `<div class="text-center py-10 text-neutral-400 font-medium">${window.getI18n('noHarvests')}</div>`; return; }
+      [...window.userHarvests].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(h => {
         const item = document.createElement('div');
         item.className = "bg-neutral-50 border border-neutral-100 rounded-2xl p-4 flex items-center justify-between shadow-sm mb-3";
-        item.innerHTML = `
-          <div class="flex items-center gap-4 overflow-hidden">
-            <div class="bg-white p-1 rounded-xl border border-neutral-100 shrink-0 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${document.getElementById('tmpl-'+h.type).innerHTML}</div>
-            <div class="truncate">
-              <h4 class="font-bold text-neutral-900 truncate">${window.getI18n(h.type)}</h4>
-              <p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">${new Date(h.date).toLocaleDateString()}</p>
-            </div>
-          </div>
-          <div class="flex flex-col items-end gap-2 shrink-0 ml-4">
-             <div class="text-right">
-                <p class="text-sm font-bold text-bladgroen">${h.weight}</p>
-             </div>
-             <button class="remove-harvest-btn text-[9px] font-bold text-red-500 border border-red-200 bg-white px-2 py-1 rounded-md uppercase hover:bg-red-50 active:bg-red-500 active:text-white transition-colors" onclick="confirmRemoveHarvest(event, '${h.id}')" data-id="${h.id}">${window.getI18n('remove')}</button>
-          </div>
-        `;
+        item.innerHTML = `<div class="flex items-center gap-4 overflow-hidden"><div class="bg-white p-1 rounded-xl border border-neutral-100 shrink-0 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${document.getElementById('tmpl-'+h.type).innerHTML}</div><div class="truncate"><h4 class="font-bold text-neutral-900 truncate">${h.type === 'custom' ? (h.customName || 'Custom') : window.getI18n(h.type)}</h4><p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">${new Date(h.date).toLocaleDateString()}</p></div></div><div class="flex flex-col items-end gap-2 shrink-0 ml-4"><div class="text-right"><p class="text-sm font-bold text-bladgroen">${h.weight}</p></div><button class="text-[9px] font-bold text-red-500 border border-red-200 bg-white px-2 py-1 rounded-md uppercase hover:bg-red-50 transition-colors" onclick="confirmRemoveHarvest(event, '${h.id}')">${window.getI18n('remove')}</button></div>`;
         list.appendChild(item);
       });
     };
 
-    window.confirmRemoveHarvest = async function(e, harvestId) {
-      if (confirm(window.getI18n('confirmDeleteOne'))) {
-        if (window.removeHarvestFromFirebase) {
-          await window.removeHarvestFromFirebase(harvestId);
-        }
-      }
-    };
-
-    window.confirmRemoveAllHarvests = async function(e) {
-      if (confirm(window.getI18n('confirmDeleteAll'))) {
-        if (window.removeAllHarvestsFromFirebase) {
-          await window.removeAllHarvestsFromFirebase();
-        }
-      }
-    };
+    window.confirmRemoveHarvest = async function(e, harvestId) { if (confirm(window.getI18n('confirmDeleteOne'))) await window.removeHarvestFromFirebase(harvestId); };
+    window.confirmRemoveAllHarvests = async function(e) { if (confirm(window.getI18n('confirmDeleteAll'))) await window.removeAllHarvestsFromFirebase(); };
 
     window.doHarvest = async function() {
       if (!currentTargetVegElement) return;
       const weight = prompt(window.getI18n('promptWeight'), "");
       if (weight !== null && weight.trim() !== "") {
-        const harvestEntry = {
-          id: "h-" + Date.now(),
-          type: currentTargetVegElement.dataset.type,
-          date: new Date().toISOString(),
-          weight: weight
-        };
-        if (window.saveHarvestToFirebase) {
-          await window.saveHarvestToFirebase(harvestEntry);
-        }
-        
-        // CRITICAL: Immediately remove the element from DOM and update cloud garden
-        const elToRemove = currentTargetVegElement;
-        elToRemove.remove();
-        
-        if (window.saveGardenToFirebase) {
-          await window.saveGardenToFirebase(true);
-        }
-        
-        closeVegDetails();
-        alert(window.getI18n('harvest') + " saved!");
+        const harvestEntry = { id: "h-" + Date.now(), type: currentTargetVegElement.dataset.type, customName: currentTargetVegElement.dataset.customName || "", date: new Date().toISOString(), weight: weight };
+        if (window.saveHarvestToFirebase) await window.saveHarvestToFirebase(harvestEntry);
+        currentTargetVegElement.remove();
+        if (window.saveGardenToFirebase) await window.saveGardenToFirebase(true);
+        closeVegDetails(); alert(window.getI18n('harvest') + " saved!");
       }
     };
 
@@ -1176,105 +882,64 @@
       clearSelection();
     }
 
-    function clearSelection() {
-      if (currentSelectedElement) {
-        currentSelectedElement.classList.remove('is-selected');
-        currentSelectedElement = null;
-      }
-    }
+    function clearSelection() { if (currentSelectedElement) { currentSelectedElement.classList.remove('is-selected'); currentSelectedElement = null; } }
 
     function handleCanvasClick(clientX, clientY, eventTarget) {
       if (!window.isBuildingModeActive) return;
       if (eventTarget.closest('.garden-veg-container') || eventTarget.closest('.garden-line-container') || eventTarget.closest('.stretch-handle')) return;
       if (currentSelectedElement) { clearSelection(); setMode('drag'); return; }
-
-      const rect = container.getBoundingClientRect();
-      const x = (clientX - rect.left - translateX) / window.scale;
-      const y = (clientY - rect.top - translateY) / window.scale;
-
-      if (activeMode === 'add') placeLineAt(x, y);
-      else if (activeMode === 'add-veg' && selectedVegType) placeVegAt(x, y, selectedVegType);
+      const rect = container.getBoundingClientRect(), x = (clientX - rect.left - translateX) / window.scale, y = (clientY - rect.top - translateY) / window.scale;
+      if (activeMode === 'add') placeLineAt(x, y); else if (activeMode === 'add-veg' && selectedVegType) placeVegAt(x, y, selectedVegType);
     }
 
     function placeLineAt(x, y) {
-      const containerDiv = document.createElement('div');
-      containerDiv.className = 'garden-line-container';
-      containerDiv.style.left = `${x}px`;
-      containerDiv.style.top = `${y - 20}px`;
-      containerDiv.dataset.rotation = 0;
-
-      const lineDiv = document.createElement('div');
-      lineDiv.className = 'garden-line';
-      lineDiv.style.width = '38px';
-
-      const handleDiv = document.createElement('div');
-      handleDiv.className = 'stretch-handle';
-
-      containerDiv.appendChild(lineDiv);
-      containerDiv.appendChild(handleDiv);
-      workspace.appendChild(containerDiv);
-
+      const containerDiv = document.createElement('div'); containerDiv.className = 'garden-line-container';
+      containerDiv.style.left = `${x}px`; containerDiv.style.top = `${y - 20}px`; containerDiv.dataset.rotation = 0;
+      const lineDiv = document.createElement('div'); lineDiv.className = 'garden-line'; lineDiv.style.width = '38px';
+      const handleDiv = document.createElement('div'); handleDiv.className = 'stretch-handle';
+      containerDiv.appendChild(lineDiv); containerDiv.appendChild(handleDiv); workspace.appendChild(containerDiv);
       window.makeLineInteractive(containerDiv, lineDiv);
-      currentSelectedElement = containerDiv;
-      currentSelectedElement.classList.add('is-selected');
+      currentSelectedElement = containerDiv; currentSelectedElement.classList.add('is-selected');
     }
 
     function placeVegAt(x, y, type) {
-      const vegDiv = document.createElement('div');
-      vegDiv.className = 'garden-veg-container';
-      // Adjust offset for larger 120x130 size to center on click
-      vegDiv.style.left = `${x - 60}px`;
-      vegDiv.style.top = `${y - 65}px`;
-      vegDiv.dataset.type = type;
-      vegDiv.dataset.id = "id-" + Date.now(); 
-
+      let customName = "";
+      if (type === 'custom') { customName = prompt(window.getI18n('promptCustomName')) || "My Plant"; }
+      const vegDiv = document.createElement('div'); vegDiv.className = 'garden-veg-container';
+      vegDiv.style.left = `${x - 60}px`; vegDiv.style.top = `${y - 65}px`;
+      vegDiv.dataset.type = type; vegDiv.dataset.id = "id-" + Date.now();
+      if (customName) vegDiv.dataset.customName = customName;
       const vegData = vegLibraryData.find(v => v.id === type);
       vegDiv.dataset.growDays = vegData ? vegData.growTime : "";
-
-      const svgTemplate = document.getElementById(`tmpl-${type}`).innerHTML;
-      const label = window.getI18n(type);
-      vegDiv.innerHTML = `${svgTemplate}<span class="text-[11px] text-neutral-600 mt-1 font-bold pointer-events-none text-center truncate w-full px-2">${label}</span>`;
-
-      workspace.appendChild(vegDiv);
-      window.makeVegInteractive(vegDiv);
-      currentSelectedElement = vegDiv;
-      currentSelectedElement.classList.add('is-selected');
+      const display = (type === 'custom' && customName) ? customName : window.getI18n(type);
+      vegDiv.innerHTML = `${document.getElementById(`tmpl-${type}`).innerHTML}<span class="text-[11px] text-neutral-600 mt-1 font-bold pointer-events-none text-center truncate w-full px-2">${display}</span>`;
+      workspace.appendChild(vegDiv); window.makeVegInteractive(vegDiv);
+      currentSelectedElement = vegDiv; currentSelectedElement.classList.add('is-selected');
     }
 
     window.openVegDetails = function(vegEl) {
-      currentTargetVegElement = vegEl;
-      const type = vegEl.dataset.type;
-      document.getElementById('detailVegTitle').innerText = window.getI18n(type);
+      currentTargetVegElement = vegEl; const type = vegEl.dataset.type;
+      document.getElementById('detailVegTitle').innerText = type === 'custom' ? (vegEl.dataset.customName || 'Custom') : window.getI18n(type);
       document.getElementById('detailVegIcon').innerHTML = `<div class="scale-[0.6]">${document.getElementById(`tmpl-${type}`).innerHTML}</div>`;
       document.getElementById('inputPlantedDate').value = vegEl.dataset.plantedDate || "";
       document.getElementById('inputGrowDays').value = vegEl.dataset.growDays || "";
-      calculateHarvestDate();
-      showScreen('vegDetailScreen');
+      calculateHarvestDate(); showScreen('vegDetailScreen');
     };
 
-    window.closeVegDetails = function() {
-      showScreen('gardenScreen');
-      currentTargetVegElement = null;
-    };
+    window.closeVegDetails = function() { showScreen('gardenScreen'); currentTargetVegElement = null; };
 
     window.saveVegDetails = async function() {
       if (currentTargetVegElement) {
         currentTargetVegElement.dataset.plantedDate = document.getElementById('inputPlantedDate').value;
         currentTargetVegElement.dataset.growDays = document.getElementById('inputGrowDays').value;
-        if (window.saveGardenToFirebase) {
-          await window.saveGardenToFirebase(true);
-        }
+        if (window.saveGardenToFirebase) await window.saveGardenToFirebase(true);
       }
       closeVegDetails();
     };
 
     window.saveGarden = async function() {
-      if(window.saveGardenToFirebase) {
-        await window.saveGardenToFirebase();
-      }
-      const gTitle = document.getElementById('gardenTitle');
-      gTitle.setAttribute('data-key', 'viewGarden');
-      gTitle.innerText = window.getI18n('viewGarden');
+      if(window.saveGardenToFirebase) await window.saveGardenToFirebase();
+      const gTitle = document.getElementById('gardenTitle'); gTitle.setAttribute('data-key', 'viewGarden'); gTitle.innerText = window.getI18n('viewGarden');
       lockGarden();
     };
 
@@ -1284,209 +949,75 @@
         workspace.querySelectorAll('.garden-veg-container').forEach(el => window.makeVegInteractive(el));
         workspace.querySelectorAll('.garden-line-container').forEach(c => window.makeLineInteractive(c, c.querySelector('.garden-line')));
       }
-      const gTitle = document.getElementById('gardenTitle');
-      gTitle.setAttribute('data-key', 'viewGarden');
-      gTitle.innerText = window.getI18n('viewGarden');
+      const gTitle = document.getElementById('gardenTitle'); gTitle.setAttribute('data-key', 'viewGarden'); gTitle.innerText = window.getI18n('viewGarden');
       lockGarden();
     };
 
     window.calculateHarvestDate = function() {
-      const pDateInput = document.getElementById('inputPlantedDate').value;
-      const gDaysInput = document.getElementById('inputGrowDays').value;
-      const gDays = parseInt(gDaysInput);
-      const out = document.getElementById('outputHarvestDate');
-      const progressBar = document.getElementById('growthProgressBar');
-      const progressText = document.getElementById('growthProgressText');
-      
+      const pDateInput = document.getElementById('inputPlantedDate').value, gDaysInput = document.getElementById('inputGrowDays').value, gDays = parseInt(gDaysInput), out = document.getElementById('outputHarvestDate'), bar = document.getElementById('growthProgressBar'), text = document.getElementById('growthProgressText');
       if (pDateInput && !isNaN(gDays) && gDays > 0) {
-        const plantedDate = new Date(pDateInput);
-        const harvestDate = new Date(plantedDate);
-        harvestDate.setDate(harvestDate.getDate() + gDays);
+        const plantedDate = new Date(pDateInput), harvestDate = new Date(plantedDate); harvestDate.setDate(harvestDate.getDate() + gDays);
         out.value = harvestDate.toLocaleDateString(window.currentLang === 'nl' ? 'nl-NL' : 'en-GB');
-
-        const today = new Date();
-        const progress = Math.min(100, Math.max(0, Math.round((today - plantedDate) / (gDays * 86400000) * 100)));
-        
-        progressBar.style.width = progress + '%';
-        progressText.innerText = progress + '%';
-      } else {
-        out.value = "";
-        progressBar.style.width = '0%';
-        progressText.innerText = '0%';
-      }
+        const progress = Math.min(100, Math.max(0, Math.round((new Date() - plantedDate) / (gDays * 86400000) * 100)));
+        bar.style.width = progress + '%'; text.innerText = progress + '%';
+      } else { out.value = ""; bar.style.width = '0%'; text.innerText = '0%'; }
     };
 
     window.makeLineInteractive = function(containerEl, lineEl) {
-      let isDragging = false, isTransforming = false;
-      let startX, startY, startLeft, startTop, startAngleInitial, startElementAngle;
-      let centerX, centerY;
-
+      let isDragging = false, isTransforming = false, startX, startY, startLeft, startTop, startAngleInitial, startElementAngle, centerX, centerY;
       containerEl.onpointerdown = (e) => {
-        if (!window.isBuildingModeActive) return;
-        e.stopPropagation();
+        if (!window.isBuildingModeActive) return; e.stopPropagation();
         if (activeMode === 'remove') { containerEl.remove(); return; }
-        clearSelection();
-        currentSelectedElement = containerEl;
-        currentSelectedElement.classList.add('is-selected');
-
+        clearSelection(); currentSelectedElement = containerEl; currentSelectedElement.classList.add('is-selected');
         if (e.target.classList.contains('stretch-handle')) {
-          isTransforming = true;
-          const rect = containerEl.getBoundingClientRect();
-          centerX = rect.left;
-          centerY = rect.top;
-          startElementAngle = parseFloat(containerEl.dataset.rotation || 0);
-          startAngleInitial = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
+          isTransforming = true; const rect = containerEl.getBoundingClientRect(); centerX = rect.left; centerY = rect.top;
+          startElementAngle = parseFloat(containerEl.dataset.rotation || 0); startAngleInitial = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
         } else {
-          isDragging = true;
-          startX = e.clientX; startY = e.clientY;
-          startLeft = parseInt(containerEl.style.left); startTop = parseInt(containerEl.style.top);
+          isDragging = true; startX = e.clientX; startY = e.clientY; startLeft = parseInt(containerEl.style.left); startTop = parseInt(containerEl.style.top);
         }
         containerEl.setPointerCapture(e.pointerId);
       };
-
       containerEl.onpointermove = (e) => {
-        if (isDragging) {
-          containerEl.style.left = `${startLeft + (e.clientX - startX) / window.scale}px`;
-          containerEl.style.top = `${startTop + (e.clientY - startY) / window.scale}px`;
-        } else if (isTransforming) {
+        if (isDragging) { containerEl.style.left = `${startLeft + (e.clientX - startX) / window.scale}px`; containerEl.style.top = `${startTop + (e.clientY - startY) / window.scale}px`; }
+        else if (isTransforming) {
           const currentMouseAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-          let deltaAngle = currentMouseAngle - startAngleInitial;
-          let deg = startElementAngle + deltaAngle;
-          const snap = 22.5;
-          deg = Math.round(deg / snap) * snap;
-          containerEl.style.transform = `rotate(${deg}deg)`;
-          containerEl.dataset.rotation = deg;
-          const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY) / window.scale;
-          lineEl.style.width = `${Math.max(15, dist)}px`;
+          let deg = Math.round((startElementAngle + (currentMouseAngle - startAngleInitial)) / 22.5) * 22.5;
+          containerEl.style.transform = `rotate(${deg}deg)`; containerEl.dataset.rotation = deg;
+          lineEl.style.width = `${Math.max(15, Math.hypot(e.clientX - centerX, e.clientY - centerY) / window.scale)}px`;
         }
       };
-
       containerEl.onpointerup = (e) => { isDragging = isTransforming = false; containerEl.releasePointerCapture(e.pointerId); };
     };
 
     window.makeVegInteractive = function(vegEl) {
       let isDragging = false, moved = false, startX, startY, startLeft, startTop;
-
       vegEl.onpointerdown = (e) => {
-        e.stopPropagation();
-        if (window.isBuildingModeActive && activeMode === 'remove') { 
-          vegEl.remove(); 
-          return; 
-        }
-        clearSelection();
-        currentSelectedElement = vegEl;
-        currentSelectedElement.classList.add('is-selected');
-        
-        moved = false;
-        startX = e.clientX; startY = e.clientY;
-        startLeft = parseInt(vegEl.style.left); startTop = parseInt(vegEl.style.top);
-        
-        if (window.isBuildingModeActive) {
-          isDragging = true;
-          vegEl.setPointerCapture(e.pointerId);
-        }
+        e.stopPropagation(); if (window.isBuildingModeActive && activeMode === 'remove') { vegEl.remove(); return; }
+        clearSelection(); currentSelectedElement = vegEl; currentSelectedElement.classList.add('is-selected');
+        moved = false; startX = e.clientX; startY = e.clientY; startLeft = parseInt(vegEl.style.left); startTop = parseInt(vegEl.style.top);
+        if (window.isBuildingModeActive) { isDragging = true; vegEl.setPointerCapture(e.pointerId); }
       };
-
       vegEl.onpointermove = (e) => {
-        if (!isDragging) {
-            const dx = (e.clientX - (startX||0));
-            const dy = (e.clientY - (startY||0));
-            if (Math.abs(dx) > 5 || Math.abs(dy) > 5) moved = true;
-            return;
-        }
-        const dx = (e.clientX - startX) / window.scale;
-        const dy = (e.clientY - startY) / window.scale;
-        if (Math.abs(dx) > 3 || Math.abs(dy) > 3) moved = true; 
-        vegEl.style.left = `${startLeft + dx}px`;
-        vegEl.style.top = `${startTop + dy}px`;
+        if (!isDragging) { if (Math.abs(e.clientX - (startX||0)) > 5 || Math.abs(e.clientY - (startY||0)) > 5) moved = true; return; }
+        moved = true; vegEl.style.left = `${startLeft + (e.clientX - startX) / window.scale}px`; vegEl.style.top = `${startTop + (e.clientY - startY) / window.scale}px`;
       };
-
-      vegEl.onpointerup = (e) => {
-        if (isDragging) {
-            isDragging = false; 
-            vegEl.releasePointerCapture(e.pointerId);
-        }
-        if (!moved && activeMode !== 'remove') {
-            window.openVegDetails(vegEl);
-        }
-      };
+      vegEl.onpointerup = (e) => { if (isDragging) { isDragging = false; vegEl.releasePointerCapture(e.pointerId); } if (!moved && activeMode !== 'remove') window.openVegDetails(vegEl); };
     };
 
-    function updateWorkspaceTransform() {
-      workspace.style.transform = `translate(${translateX}px, ${translateY}px) scale(${window.scale})`;
-      const zBadge = document.getElementById('zoomBadge');
-      if (zBadge) zBadge.innerText = `${window.getI18n('zoom')}: ${Math.round(window.scale * 100)}%`;
-    }
-
-    window.resetGardenView = function() {
-      const containerRect = container.getBoundingClientRect();
-      window.scale = 0.8;
-      // Centering on 1000, 1000
-      translateX = (containerRect.width / 2) - (1000 * window.scale);
-      translateY = (containerRect.height / 2) - (1000 * window.scale);
-      updateWorkspaceTransform();
-    };
+    function updateWorkspaceTransform() { workspace.style.transform = `translate(${translateX}px, ${translateY}px) scale(${window.scale})`; const zBadge = document.getElementById('zoomBadge'); if (zBadge) zBadge.innerText = `${window.getI18n('zoom')}: ${Math.round(window.scale * 100)}%`; }
+    window.resetGardenView = function() { const r = container.getBoundingClientRect(); window.scale = 0.8; translateX = (r.width / 2) - (1000 * window.scale); translateY = (r.height / 2) - (1000 * window.scale); updateWorkspaceTransform(); };
 
     function initGardenInteractions() {
       let lastX, lastY, isPanning = false, startDist = 0, initialScale = 1;
-
-      container.onpointerdown = (e) => {
-        if (e.target.closest('.garden-veg-container') || e.target.closest('.garden-line-container') || e.target.closest('.stretch-handle')) return;
-        isPanning = true;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        container.setPointerCapture(e.pointerId);
-      };
-
-      container.onpointermove = (e) => {
-        if (!isPanning) return;
-        const dx = e.clientX - lastX;
-        const dy = e.clientY - lastY;
-        translateX += dx;
-        translateY += dy;
-        lastX = e.clientX;
-        lastY = e.clientY;
-        updateWorkspaceTransform();
-      };
-
-      container.onpointerup = (e) => {
-        isPanning = false;
-        container.releasePointerCapture(e.pointerId);
-      };
-
-      container.addEventListener('touchstart', (e) => {
-        if (e.touches.length === 2) {
-          isPanning = false;
-          startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-          initialScale = window.scale;
-        }
-      }, { passive: true });
-
-      container.addEventListener('touchmove', (e) => {
-        if (e.touches.length === 2 && startDist > 0) {
-          const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY);
-          const ratio = d / startDist;
-          const oldScale = window.scale;
-          window.scale = Math.max(0.2, Math.min(4, initialScale * ratio));
-          const rect = container.getBoundingClientRect();
-          const centerX = rect.width / 2;
-          const centerY = rect.height / 2;
-          translateX = centerX - (centerX - translateX) * (window.scale / oldScale);
-          translateY = centerY - (centerY - translateY) * (window.scale / oldScale);
-          updateWorkspaceTransform();
-        }
-      }, { passive: true });
-
-      container.addEventListener('click', (e) => {
-          handleCanvasClick(e.clientX, e.clientY, e.target);
-      });
+      container.onpointerdown = (e) => { if (e.target.closest('.garden-veg-container') || e.target.closest('.garden-line-container')) return; isPanning = true; lastX = e.clientX; lastY = e.clientY; container.setPointerCapture(e.pointerId); };
+      container.onpointermove = (e) => { if (!isPanning) return; translateX += e.clientX - lastX; translateY += e.clientY - lastY; lastX = e.clientX; lastY = e.clientY; updateWorkspaceTransform(); };
+      container.onpointerup = (e) => { isPanning = false; container.releasePointerCapture(e.pointerId); };
+      container.addEventListener('touchstart', (e) => { if (e.touches.length === 2) { isPanning = false; startDist = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY); initialScale = window.scale; } }, { passive: true });
+      container.addEventListener('touchmove', (e) => { if (e.touches.length === 2 && startDist > 0) { const d = Math.hypot(e.touches[0].pageX - e.touches[1].pageX, e.touches[0].pageY - e.touches[1].pageY), ratio = d / startDist, oldScale = window.scale; window.scale = Math.max(0.2, Math.min(4, initialScale * ratio)); const r = container.getBoundingClientRect(), cx = r.width / 2, cy = r.height / 2; translateX = cx - (cx - translateX) * (window.scale / oldScale); translateY = cy - (cy - translateY) * (window.scale / oldScale); updateWorkspaceTransform(); } }, { passive: true });
+      container.addEventListener('click', (e) => handleCanvasClick(e.clientX, e.clientY, e.target));
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      initGardenInteractions();
-      updateUI();
-      window.resetGardenView();
-    });
+    window.addEventListener('DOMContentLoaded', () => { initGardenInteractions(); updateUI(); window.resetGardenView(); });
   </script>
 <!-- END: Application Scripts -->
 </body></html>
