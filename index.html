@@ -112,13 +112,13 @@
       cursor: move;
     }
 
-    #libraryList::-webkit-scrollbar, #harvestList::-webkit-scrollbar {
+    #libraryList::-webkit-scrollbar, #harvestList::-webkit-scrollbar, #vegSubMenu::-webkit-scrollbar {
       width: 4px;
     }
-    #libraryList::-webkit-scrollbar-track, #harvestList::-webkit-scrollbar-track {
+    #libraryList::-webkit-scrollbar-track, #harvestList::-webkit-scrollbar-track, #vegSubMenu::-webkit-scrollbar-track {
       background: #f3f4f6;
     }
-    #libraryList::-webkit-scrollbar-thumb, #harvestList::-webkit-scrollbar-thumb {
+    #libraryList::-webkit-scrollbar-thumb, #harvestList::-webkit-scrollbar-thumb, #vegSubMenu::-webkit-scrollbar-thumb {
       background: #d1d5db;
       border-radius: 10px;
     }
@@ -328,26 +328,30 @@
 <!-- END: Firebase & Auth Logic -->
 <!-- BEGIN: Translation Data & Logic -->
 <script>
+  // Finalized 101 Items Translations
   const translations = {
     en: {
       login: "Login", register: "Register", emailPlaceholder: "Email address", passPlaceholder: "Password", confirmPassPlaceholder: "Confirm password", noAccount: "No account? Register here", createAccount: "Create Account", backToLogin: "Back to Login", logout: "LOG OUT", gardenTitle: "My Garden", viewGarden: "View Garden", buildGarden: "Build/change your Garden", vegLibrary: "Vegetables Library", settings: "Settings", addLine: "Add Line", addPlant: "Add Plant", remove: "Remove", removeAll: "Remove All", duplicateLine: "Duplicate", save: "SAVE", cancel: "CANCEL", vegetableInfo: "Vegetable Info", plantedDate: "Planted date", growDays: "Grow days", estHarvest: "Estimated harvest", growthProgress: "Growth Progress", autoCalc: "Automatic calculation", back: "Back", saveChanges: "Save changes", menu: "Menu", language: "Language", english: "English", dutch: "Dutch", zoom: "Zoom", alertFillEmail: "Please fill in email and password.", alertPassMismatch: "Passwords do not match.", alertSaved: "Garden saved!", feedback: "Feedback", sunlight: "Sunlight", watering: "Watering", illnesses: "Common Illnesses", calendar: "Planting Calendar", greenhouse: "Greenhouse", outside: "Outside", atHome: "Indoor", resetView: "Reset View", adPlaceholder: "Google Ad Placeholder", jan: "Jan", feb: "Feb", mar: "Mar", apr: "Apr", may: "May", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Oct", nov: "Nov", dec: "Dec",
       harvestRegistration: "Harvest Registration", harvestDiary: "Harvest Diary", harvest: "Harvest", weight: "Weight", expectedHarvest: "Exp. Harvest/Plant", promptWeight: "Enter harvest weight (grams/units):", noHarvests: "No harvests recorded yet.", confirmDeleteOne: "Do you want to remove this?", confirmDeleteAll: "Do you want to remove all?",
       today: "Today", vandaag: "Today", todayHeader: "Today - ", readyToHarvest: "Ready to Harvest", wateringList: "Watering Needed", comingSoon: "Soon", harvestReadyDesc: "ready to harvest", harvestableIn: "harvestable in", days: "days", emptyGardenTasks: "Your garden is empty. Add plants in 'Build/change your Garden' to see tasks here.", promptCustomName: "Enter name for your custom plant:",
-      // 50 Vegetables
-      potato: "Potato", tomato: "Tomato", lettuce: "Lettuce", carrot: "Carrot", onion: "Onion", courgette: "Courgette", cucumber: "Cucumber", spinach: "Spinach", "green-bean": "Green Bean", pod: "Pod", pea: "Pea", "runner-bean": "Runner Bean", leek: "Leek", kohlrabi: "Kohlrabi", radish: "Radish", beetroot: "Beetroot", endive: "Endive", kale: "Kale", "white-cabbage": "White Cabbage", "red-cabbage": "Red Cabbage", "savoy-cabbage": "Savoy Cabbage", cauliflower: "Cauliflower", broccoli: "Broccoli", "brussels-sprout": "Brussels Sprout", "chinese-cabbage": "Chinese Cabbage", "pak-choi": "Pak Choi", chard: "Chard", celeriac: "Celeriac", celery: "Celery", fennel: "Fennel", parsnip: "Parsnip", "turnip-greens": "Turnip Greens", arugula: "Arugula", "lambs-lettuce": "Lambs Lettuce", "iceberg-lettuce": "Iceberg Lettuce", "romaine-lettuce": "Romaine Lettuce", "little-gem": "Little Gem", "bell-pepper": "Bell Pepper", "chili-pepper": "Chili Pepper", eggplant: "Eggplant", pumpkin: "Pumpkin", pattypan: "Pattypan", corn: "Corn", garlic: "Garlic", shallot: "Shallot", "spring-onion": "Spring Onion", "winter-radish": "Winter Radish", "may-turnip": "May Turnip", salsify: "Salsify", "bulb-fennel": "Bulb Fennel", custom: "Custom Plant",
-      // Veg Info Generic
+      custom: "Custom Plant",
+      root: "Root", leafy: "Leafy", herb: "Herb", legume: "Legume", fruit_veg: "Fruit/Veg", perennial: "Perennial",
       "Partial Shade": "Partial Shade", "Full Sun": "Full Sun", "Daily": "Daily", "2-3 times/week": "2-3 times/week", "Regularly": "Regularly", "Moderate": "Moderate", "Low": "Low", "High": "High"
     },
     nl: {
-      login: "Inloggen", register: "Registreren", emailPlaceholder: "E-mailadres", passPlaceholder: "Wachtwoord", confirmPassPlaceholder: "Bevestig wachtwoord", noAccount: "Nog geen account? Registreer hier", createAccount: "Maak Account Aan", backToLogin: "Terug naar Login", logout: "UITLOGGEN", gardenTitle: "Mijn Tuin", viewGarden: "Bekijk Tuin", buildGarden: "Bouw/wijzig je Tuin", vegLibrary: "Groenten Bibliotheek", settings: "Instellingen", addLine: "Lijn Toevoegen", addPlant: "Plant Toevoegen", remove: "Verwijderen", removeAll: "Verwijder alles", duplicateLine: "Dupliceren", save: "OPSLAAN", cancel: "ANNULEREN", vegetableInfo: "Groente Info", plantedDate: "Plantdatum", growDays: "Groeidagen", estHarvest: "Verwachte oogst", growthProgress: "Groei Voortgang", autoCalc: "Automatische berekening", back: "Terug", saveChanges: "Wijzigingen opslaan", menu: "Menu", language: "Taal", english: "Engels", dutch: "Nederlands", zoom: "Zoom", alertFillEmail: "Vul aub e-mail en wachtwoord in.", alertPassMismatch: "Wachtwoorden komen niet overeen.", alertSaved: "Tuin opgeslagen!", feedback: "Feedback", sunlight: "Zonlicht", watering: "Water geven", illnesses: "Ziekten", calendar: "Plantkalender", greenhouse: "Kas", outside: "Buiten", atHome: "Binnen", resetView: "Reset Beeld", adPlaceholder: "Google Ad Placeholder", jan: "Jan", feb: "Mrt", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
+      login: "Inloggen", register: "Registreren", emailPlaceholder: "E-mailadres", passPlaceholder: "Wachtwoord", confirmPassPlaceholder: "Bevestig wachtwoord", noAccount: "Nog geen account? Registreer hier", createAccount: "Maak Account Aan", backToLogin: "Terug naar Login", logout: "UITLOGGEN", gardenTitle: "Mijn Tuin", viewGarden: "Bekijk Tuin", buildGarden: "Bouw/wijzig je Tuin", vegLibrary: "Groenten Bibliotheek", settings: "Instellingen", addLine: "Lijn Toevoegen", addPlant: "Plant Toevoegen", remove: "Verwijderen", removeAll: "Verwijder alles", duplicateLine: "Dupliceren", save: "OPSLAAN", cancel: "ANNULEREN", vegetableInfo: "Groente Info", plantedDate: "Plantdatum", growDays: "Groeidagen", estHarvest: "Verwachte oogst", growthProgress: "Groei Voortgang", autoCalc: "Automatische berekening", back: "Terug", saveChanges: "Wijzigingen opslaan", menu: "Menu", language: "Taal", english: "Engels", dutch: "Nederlands", zoom: "Zoom", alertFillEmail: "Vul aub e-mail en wachtwoord in.", alertPassMismatch: "Wachtwoorden komen niet overeen.", alertSaved: "Tuin opgeslagen!", feedback: "Feedback", sunlight: "Zonlicht", watering: "Water geven", illnesses: "Ziekten", calendar: "Plantkalender", greenhouse: "Kas", outside: "Buiten", atHome: "Binnen", resetView: "Reset Beeld", adPlaceholder: "Google Ad Placeholder", jan: "Jan", feb: "Feb", mar: "Mrt", apr: "Apr", may: "Mei", jun: "Jun", jul: "Jul", aug: "Aug", sep: "Sep", oct: "Okt", nov: "Nov", dec: "Dec",
       harvestRegistration: "Oogst Registratie", harvestDiary: "Oogst Dagboek", harvest: "Oogst", weight: "Gewicht", expectedHarvest: "Verw. Oogst/Plant", promptWeight: "Voer oogstgewicht in (gram/stuks):", noHarvests: "Nog geen oogsten geregistreerd.", confirmDeleteOne: "Wilt u deze verwijderen?", confirmDeleteAll: "Wilt u alles verwijderen?",
       today: "Vandaag", vandaag: "Vandaag", todayHeader: "Vandaag - ", readyToHarvest: "Klaar om te Oogsten", wateringList: "Water Geven", comingSoon: "Binnenkort", harvestReadyDesc: "klaar voor de oogst", harvestableIn: "oogstbaar over", days: "dagen", emptyGardenTasks: "Je tuin is leeg. Voeg planten toe via 'Bouw/wijzig je Tuin' om hier taken te zien.", promptCustomName: "Voer de naam in voor uw plant:",
-      // 50 Vegetables
-      potato: "Aardappel", tomato: "Tomaat", lettuce: "Sla", carrot: "Wortel", onion: "Ui", courgette: "Courgette", cucumber: "Komkommer", spinach: "Spinazie", "green-bean": "Sperzieboon", pod: "Peul", pea: "Doperwt", "runner-bean": "Snijboon", leek: "Prei", kohlrabi: "Kohlrabi", radish: "Radijs", beetroot: "Rode biet", endive: "Andijvie", kale: "Boerenkool", "white-cabbage": "Witte kool", "red-cabbage": "Rode kool", "savoy-cabbage": "Savooiekool", cauliflower: "Bloemkool", broccoli: "Broccoli", "brussels-sprout": "Spruitkool", "chinese-cabbage": "Chinese kool", "pak-choi": "Paksoi", chard: "Snijbiet", celeriac: "Knolselderij", celery: "Selderij", fennel: "Venkel", parsnip: "Pastinaak", "turnip-greens": "Raapsteel", arugula: "Rucola", "lambs-lettuce": "Veldsla", "iceberg-lettuce": "IJsbergsla", "romaine-lettuce": "Bindsla", "little-gem": "Little Gem", "bell-pepper": "Paprika", "chili-pepper": "Pepers", eggplant: "Aubergine", pumpkin: "Pompoen", pattypan: "Patisson", corn: "Maïs", garlic: "Knoflook", shallot: "Sjalot", "spring-onion": "Lente-ui", "winter-radish": "Rammenas", "may-turnip": "Meiraap", salsify: "Schorseneer", "bulb-fennel": "Knolvenkel", custom: "Eigen Plant",
-      // Veg Info Generic
+      custom: "Eigen Plant",
+      root: "Wortelgewas", leafy: "Bladgewas", herb: "Kruid", legume: "Peulvrucht", fruit_veg: "Vruchtgewas", perennial: "Vaste plant",
       "Partial Shade": "Halfschaduw", "Full Sun": "Volle zon", "Daily": "Dagelijks", "2-3 keer/week": "2-3 keer/week", "Regularly": "Regelmatig", "Moderate": "Gemiddeld", "Low": "Laag", "High": "Veel"
     }
   };
+
+  function addBulkTranslation(id, en, nl) {
+    translations.en[id] = en;
+    translations.nl[id] = nl;
+  }
 
   window.currentLang = 'en';
 
@@ -405,7 +409,7 @@
   }
 </script>
 <!-- END: Translation Data & Logic -->
-<!-- BEGIN: Landing/Login Screen -->
+<!-- UI Structure -->
 <div class="screen fixed inset-0 flex flex-col items-center justify-center p-6 z-50 bg-white" id="landingScreen">
 <div class="w-full max-sm flex flex-col items-center">
 <div class="mb-12 flex flex-col items-center">
@@ -433,8 +437,6 @@
 </div>
 </div>
 </div>
-<!-- END: Landing/Login Screen -->
-<!-- BEGIN: Garden Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 pb-[15vh]" id="gardenScreen">
 <div class="flex items-center justify-between w-full border-b border-neutral-100 pb-4 z-10">
 <button class="p-2 text-neutral-900 focus:outline-none" data-purpose="menu-toggle" onclick="toggleMenu(true)">
@@ -470,8 +472,6 @@
 </div>
 </div>
 <div class="fixed bottom-0 left-0 w-full h-[12.5vh] bg-white border-t border-neutral-100 flex items-center justify-center z-[60]"><span class="text-neutral-400 text-xs font-medium uppercase tracking-widest" data-i18n="adPlaceholder">Google Ad Placeholder</span></div></div>
-<!-- END: Garden Screen -->
-<!-- BEGIN: Today Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 z-[90]" id="todayScreen">
 <div class="flex items-center gap-4 border-b border-neutral-100 pb-4 mb-4">
 <h2 class="text-2xl font-bold text-neutral-900" id="todayHeader">Today</h2>
@@ -481,8 +481,6 @@
 <button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
 </div>
 </div>
-<!-- END: Today Screen -->
-<!-- BEGIN: Settings Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-6 z-[80] justify-between items-center" id="settingsScreen">
 <div class="w-full max-w-sm flex flex-col">
 <div class="flex items-center gap-4 border-b border-neutral-100 pb-6 mb-8">
@@ -505,8 +503,6 @@
 <button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
 </div>
 </div>
-<!-- END: Settings Screen -->
-<!-- BEGIN: Vegetable Library Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 z-[85]" id="libraryScreen">
 <div class="flex items-center gap-4 border-b border-neutral-100 pb-4 mb-4">
 <h2 class="text-2xl font-bold text-neutral-900" data-i18n="vegLibrary" id="libraryTitle">Vegetables Library</h2>
@@ -516,8 +512,6 @@
 <button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" id="libraryBackBtn" onclick="showScreen('gardenScreen')">Back</button>
 </div>
 </div>
-<!-- END: Vegetable Library Screen -->
-<!-- BEGIN: Harvest Registration Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-4 z-[85]" id="harvestScreen">
 <div class="flex items-center justify-between border-b border-neutral-100 pb-4 mb-4">
 <h2 class="text-2xl font-bold text-neutral-900" data-i18n="harvestDiary" id="harvestTitle">Harvest Diary</h2>
@@ -528,8 +522,6 @@
 <button class="w-full bg-neutral-900 text-white font-bold py-4 rounded-xl border border-neutral-900" data-i18n="back" onclick="showScreen('gardenScreen')">Back</button>
 </div>
 </div>
-<!-- END: Harvest Registration Screen -->
-<!-- BEGIN: Vegetable Detail Screen -->
 <div class="screen hidden fixed inset-0 bg-white flex flex-col p-6 z-[60] justify-between items-center" id="vegDetailScreen">
 <div class="w-full max-sm flex flex-col">
 <div class="flex items-center gap-4 border-b border-neutral-100 pb-6 mb-8">
@@ -568,79 +560,31 @@
 </div>
 </div>
 </div>
-<!-- END: Vegetable Detail Screen -->
-<!-- BEGIN: Hamburger Menu Overlay -->
 <div class="hidden fixed inset-0 bg-white/95 z-[95] flex flex-col p-6" id="hamburgerMenu">
 <div class="flex justify-between items-center border-b border-neutral-100 pb-6 mb-8">
 <h3 class="text-2xl font-bold text-bladgroen" data-i18n="menu">Menu</h3>
 <button class="p-2 text-neutral-900 text-3xl" onclick="toggleMenu(false)">×</button>
 </div>
 <div class="flex flex-col space-y-3">
-<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="today" id="menuToday" onclick="selectMenuOption('today')">Today</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="viewGarden" id="menuViewGarden" onclick="selectMenuOption('viewGarden')">View Garden</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="buildGarden" id="menuBuildGarden" onclick="selectMenuOption('buildGarden')">Build/change your Garden</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="vegLibrary" id="menuVegLibrary" onclick="selectMenuOption('vegLibrary')">Vegetables Library</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="harvestRegistration" id="menuHarvestReg" onclick="selectMenuOption('harvestRegistration')">Harvest Registration</button>
-<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="settings" id="menuSettings" onclick="selectMenuOption('settings')">Settings</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="today" onclick="selectMenuOption('today')">Today</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="viewGarden" onclick="selectMenuOption('viewGarden')">View Garden</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="buildGarden" onclick="selectMenuOption('buildGarden')">Build/change your Garden</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="vegLibrary" onclick="selectMenuOption('vegLibrary')">Vegetables Library</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="harvestRegistration" onclick="selectMenuOption('harvestRegistration')">Harvest Registration</button>
+<button class="w-full text-left py-5 px-6 bg-neutral-100 rounded-2xl border border-neutral-200 active:bg-neutral-200 transition-colors" data-i18n="settings" onclick="selectMenuOption('settings')">Settings</button>
 </div>
 </div>
-<!-- END: Hamburger Menu Overlay -->
-<!-- BEGIN: Vegetable SVG Templates -->
+<!-- Vegetable SVG Templates -->
 <div class="hidden" id="veg-templates">
-<div id="tmpl-potato"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#8D6E63" rx="140" ry="100"></ellipse><circle cx="220" cy="240" fill="#6D4C41" r="5"></circle></svg></div>
+<div id="tmpl-potato"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#8D6E63" rx="140" ry="100"></ellipse></svg></div>
 <div id="tmpl-tomato"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="276" fill="#F44336" r="160"></circle><path d="M256 116L210 80L256 126Z" fill="#4CAF50"></path></svg></div>
 <div id="tmpl-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M220 180C140 160 100 240 120 320C140 400 220 420 280 390C340 360 400 300 380 220Z" fill="#4CAF50"></path></svg></div>
 <div id="tmpl-carrot"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M150 400L340 210C370 180 370 130 340 100L40 290Z" fill="#FF9800"></path></svg></div>
 <div id="tmpl-onion"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 120C160 220 140 380 256 400C372 380 352 220 256 120Z" fill="#A1887F"></path></svg></div>
-<div id="tmpl-courgette"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#2E7D32" height="90" rx="45" transform="rotate(-15 260 255)" width="240" x="140" y="210"></rect></svg></div>
-<div id="tmpl-cucumber"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#1B5E20" height="100" rx="50" transform="rotate(-30 260 250)" width="220" x="150" y="200"></rect></svg></div>
-<div id="tmpl-spinach"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 350Q150 250 256 150Q362 250 312 350Z" fill="#2E7D32"></path></svg></div>
-<div id="tmpl-green-bean"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M150 150Q250 100 350 350" fill="none" stroke="#4CAF50" stroke-linecap="round" stroke-width="25"></path></svg></div>
-<div id="tmpl-pod"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M100 200Q256 100 412 200Q256 300 100 200Z" fill="#388E3C"></path></svg></div>
-<div id="tmpl-pea"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#4CAF50" r="80"></circle></svg></div>
-<div id="tmpl-runner-bean"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M120 120L392 392" fill="none" stroke="#2E7D32" stroke-linecap="round" stroke-width="20"></path></svg></div>
-<div id="tmpl-leek"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#F5F5F5" height="150" width="40" x="236" y="250"></rect><rect fill="#4CAF50" height="150" width="40" x="236" y="100"></rect></svg></div>
-<div id="tmpl-kohlrabi"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="300" fill="#C8E6C9" r="100"></circle><path d="M256 200V100" stroke="#4CAF50" stroke-width="15"></path></svg></div>
-<div id="tmpl-radish"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#E91E63" r="80"></circle><path d="M256 270V150" stroke="#4CAF50" stroke-width="20"></path></svg></div>
-<div id="tmpl-beetroot"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="300" fill="#880E4F" r="120"></circle></svg></div>
-<div id="tmpl-endive"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M150 350Q256 100 362 350Z" fill="#8BC34A"></path></svg></div>
-<div id="tmpl-kale"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 400Q150 200 256 100Q362 200 312 400Z" fill="#1B5E20"></path></svg></div>
-<div id="tmpl-white-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#F5F5F5" r="150"></circle></svg></div>
-<div id="tmpl-red-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#6A1B9A" r="150"></circle></svg></div>
-<div id="tmpl-savoy-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#388E3C" r="150"></circle></svg></div>
-<div id="tmpl-cauliflower"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="270" fill="#E0E0E0" r="100"></circle></svg></div>
-<div id="tmpl-broccoli"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="220" fill="#2E7D32" r="90"></circle></svg></div>
-<div id="tmpl-brussels-sprout"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#4CAF50" r="60"></circle></svg></div>
-<div id="tmpl-chinese-cabbage"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#DCEDC8" rx="100" ry="160"></ellipse></svg></div>
-<div id="tmpl-pak-choi"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400Q150 350 200 150Q256 100 312 150Q362 350 256 400Z" fill="#F5F5F5"></path><path d="M256 250Q200 200 256 100Q312 200 256 250Z" fill="#1B5E20"></path></svg></div>
-<div id="tmpl-chard"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 450V100" stroke="#F44336" stroke-width="15"></path><path d="M150 300Q256 50 362 300Z" fill="#4CAF50"></path></svg></div>
-<div id="tmpl-celeriac"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#D7CCC8" r="120"></circle></svg></div>
-<div id="tmpl-celery"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#8BC34A" height="300" width="60" x="226" y="100"></rect></svg></div>
-<div id="tmpl-fennel"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="380" fill="#F1F8E9" r="100"></circle></svg></div>
-<div id="tmpl-parsnip"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 100L256 450L312 100Z" fill="#FFF9C4"></path></svg></div>
-<div id="tmpl-turnip-greens"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 400Q256 100 312 400Z" fill="#4CAF50"></path></svg></div>
-<div id="tmpl-arugula"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 400L220 150Q256 100 292 150Z" fill="#388E3C"></path></svg></div>
-<div id="tmpl-lambs-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#4CAF50" r="70"></circle></svg></div>
-<div id="tmpl-iceberg-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="256" fill="#C5E1A5" r="140"></circle></svg></div>
-<div id="tmpl-romaine-lettuce"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#388E3C" rx="100" ry="160"></ellipse></svg></div>
-<div id="tmpl-little-gem"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="256" fill="#8BC34A" rx="70" ry="120"></ellipse></svg></div>
-<div id="tmpl-bell-pepper"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M180 160C140 200 140 360 256 400C372 200 372 200 332 160Z" fill="#FFB300"></path></svg></div>
-<div id="tmpl-chili-pepper"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 100Q256 450 350 150" fill="none" stroke="#D32F2F" stroke-linecap="round" stroke-width="25"></path></svg></div>
-<div id="tmpl-eggplant"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 150Q160 300 240 420Q340 420 320 250Z" fill="#4A148C"></path></svg></div>
-<div id="tmpl-pumpkin"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="300" fill="#FF9800" r="150"></circle></svg></div>
-<div id="tmpl-pattypan"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="300" fill="#FFF176" rx="160" ry="80"></ellipse></svg></div>
-<div id="tmpl-corn"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#FFEB3B" height="180" rx="40" width="80" x="216" y="160"></rect></svg></div>
-<div id="tmpl-garlic"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 150C180 150 140 280 256 400C372 280 332 150 256 150Z" fill="#F5F5F5"></path></svg></div>
-<div id="tmpl-shallot"><svg height="80" viewbox="0 0 512 512" width="80"><ellipse cx="256" cy="300" fill="#A1887F" rx="70" ry="100"></ellipse></svg></div>
-<div id="tmpl-spring-onion"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 450V100" stroke="#4CAF50" stroke-width="10"></path></svg></div>
-<div id="tmpl-winter-radish"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 100L256 450L312 100Z" fill="#F5F5F5"></path></svg></div>
-<div id="tmpl-may-turnip"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#F1F8E9" r="100"></circle></svg></div>
-<div id="tmpl-salsify"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#5D4037" height="300" width="20" x="246" y="100"></rect></svg></div>
-<div id="tmpl-bulb-fennel"><svg height="80" viewbox="0 0 512 512" width="80"><circle cx="256" cy="350" fill="#DCEDC8" r="100"></circle></svg></div>
 <div id="tmpl-custom"><svg height="80" viewbox="0 0 512 512" width="80"><rect fill="#4CAF50" height="200" rx="40" width="200" x="156" y="156"></rect><path d="M256 200V312M200 256H312" stroke="white" stroke-linecap="round" stroke-width="30"></path></svg></div>
+<div id="tmpl-generic-leaf"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M256 450Q150 350 200 150Q256 100 312 150Q362 350 256 400Z" fill="currentColor"></path></svg></div>
+<div id="tmpl-generic-root"><svg height="80" viewbox="0 0 512 512" width="80"><path d="M200 100L256 450L312 100Z" fill="currentColor"></path></svg></div>
 </div>
-<!-- END: Vegetable SVG Templates -->
-<!-- BEGIN: Application Scripts -->
 <script data-purpose="app-logic">
     window.scale = 0.8;
     let translateX = 0, translateY = 0, activeMode = 'drag', selectedVegType = null;
@@ -648,60 +592,130 @@
     let currentSelectedElement = null, currentTargetVegElement = null, gardenBackup = '';
     window.userHarvests = [];
 
-    const vegLibraryData = [
-      { id: 'potato', growTime: 100, sun: 'Full Sun', water: 'Moderate', illnesses: 'Blight, Scab', expectedHarvest: '1kg' },
-      { id: 'tomato', growTime: 80, sun: 'Full Sun', water: 'Daily', illnesses: 'Blight', expectedHarvest: '3kg' },
-      { id: 'lettuce', growTime: 45, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '250g' },
-      { id: 'carrot', growTime: 75, sun: 'Full Sun', water: '2-3 times/week', illnesses: 'Carrot Fly', expectedHarvest: '80g' },
-      { id: 'onion', growTime: 120, sun: 'Full Sun', water: 'Low', illnesses: 'Mildew', expectedHarvest: '100g' },
-      { id: 'courgette', growTime: 55, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', expectedHarvest: '4kg' },
-      { id: 'cucumber', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Mildew', expectedHarvest: '2kg' },
-      { id: 'spinach', growTime: 40, sun: 'Partial Shade', water: 'Daily', illnesses: 'Aphids', expectedHarvest: '200g' },
-      { id: 'green-bean', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '400g' },
-      { id: 'pod', growTime: 65, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '300g' },
-      { id: 'pea', growTime: 70, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '200g' },
-      { id: 'runner-bean', growTime: 70, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '500g' },
-      { id: 'leek', growTime: 150, sun: 'Full Sun', water: 'Moderate', illnesses: 'Rust', expectedHarvest: '300g' },
-      { id: 'kohlrabi', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Clubroot', expectedHarvest: '400g' },
-      { id: 'radish', growTime: 30, sun: 'Full Sun', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '20g' },
-      { id: 'beetroot', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Leaf Spot', expectedHarvest: '150g' },
-      { id: 'endive', growTime: 80, sun: 'Partial Shade', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '300g' },
-      { id: 'kale', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '500g' },
-      { id: 'white-cabbage', growTime: 120, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', expectedHarvest: '1.5kg' },
-      { id: 'red-cabbage', growTime: 130, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', expectedHarvest: '1.5kg' },
-      { id: 'savoy-cabbage', growTime: 140, sun: 'Full Sun', water: 'Regularly', illnesses: 'Cabbage White', expectedHarvest: '1.5kg' },
-      { id: 'cauliflower', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot', expectedHarvest: '800g' },
-      { id: 'broccoli', growTime: 80, sun: 'Full Sun', water: 'Regularly', illnesses: 'Clubroot', expectedHarvest: '600g' },
-      { id: 'brussels-sprout', growTime: 160, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '800g' },
-      { id: 'chinese-cabbage', growTime: 70, sun: 'Full Sun', water: 'Moderate', illnesses: 'Slugs', expectedHarvest: '1kg' },
-      { id: 'pak-choi', growTime: 50, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '400g' },
-      { id: 'chard', growTime: 60, sun: 'Full Sun', water: 'Regularly', illnesses: 'Aphids', expectedHarvest: '500g' },
-      { id: 'celeriac', growTime: 180, sun: 'Full Sun', water: 'High', illnesses: 'Leaf Spot', expectedHarvest: '800g' },
-      { id: 'celery', growTime: 120, sun: 'Full Sun', water: 'High', illnesses: 'Aphids', expectedHarvest: '600g' },
-      { id: 'fennel', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '400g' },
-      { id: 'parsnip', growTime: 150, sun: 'Full Sun', water: 'Moderate', illnesses: 'Canker', expectedHarvest: '200g' },
-      { id: 'turnip-greens', growTime: 40, sun: 'Partial Shade', water: 'Daily', illnesses: 'Mildew', expectedHarvest: '300g' },
-      { id: 'arugula', growTime: 30, sun: 'Partial Shade', water: 'Daily', illnesses: 'Flea Beetles', expectedHarvest: '100g' },
-      { id: 'lambs-lettuce', growTime: 60, sun: 'Partial Shade', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '150g' },
-      { id: 'iceberg-lettuce', growTime: 70, sun: 'Full Sun', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '400g' },
-      { id: 'romaine-lettuce', growTime: 75, sun: 'Full Sun', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '500g' },
-      { id: 'little-gem', growTime: 60, sun: 'Full Sun', water: 'Daily', illnesses: 'Slugs', expectedHarvest: '200g' },
-      { id: 'bell-pepper', growTime: 85, sun: 'Full Sun', water: 'Daily', illnesses: 'Aphids', expectedHarvest: '1kg' },
-      { id: 'chili-pepper', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '200g' },
-      { id: 'eggplant', growTime: 90, sun: 'Full Sun', water: 'High', illnesses: 'Spider Mites', expectedHarvest: '1.5kg' },
-      { id: 'pumpkin', growTime: 110, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', expectedHarvest: '5kg' },
-      { id: 'pattypan', growTime: 60, sun: 'Full Sun', water: 'High', illnesses: 'Mildew', expectedHarvest: '2kg' },
-      { id: 'corn', growTime: 90, sun: 'Full Sun', water: 'Regularly', illnesses: 'Smut', expectedHarvest: '2 units' },
-      { id: 'garlic', growTime: 240, sun: 'Full Sun', water: 'Low', illnesses: 'Rust', expectedHarvest: '50g' },
-      { id: 'shallot', growTime: 110, sun: 'Full Sun', water: 'Low', illnesses: 'Mildew', expectedHarvest: '50g' },
-      { id: 'spring-onion', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Thrips', expectedHarvest: '100g' },
-      { id: 'winter-radish', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Flea Beetles', expectedHarvest: '300g' },
-      { id: 'may-turnip', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'Flea Beetles', expectedHarvest: '200g' },
-      { id: 'salsify', growTime: 180, sun: 'Full Sun', water: 'Moderate', illnesses: 'Mildew', expectedHarvest: '150g' },
-      { id: 'bulb-fennel', growTime: 90, sun: 'Full Sun', water: 'Moderate', illnesses: 'Aphids', expectedHarvest: '400g' },
-      { id: 'custom', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'General', expectedHarvest: 'N/A' }
-    ].map(v => ({ ...v, calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] } }));
+    // Streamlined 100 + 1 Custom data structure
+    const vegLibraryData = [];
+    
+    const veggieBases = [
+      { id: 'potato', en: 'Potato', nl: 'Aardappel', cat: 'root', days: 100 },
+      { id: 'tomato', en: 'Tomato', nl: 'Tomaat', cat: 'fruit_veg', days: 80 },
+      { id: 'lettuce', en: 'Lettuce', nl: 'Sla', cat: 'leafy', days: 45 },
+      { id: 'carrot', en: 'Carrot', nl: 'Wortel', cat: 'root', days: 75 },
+      { id: 'onion', en: 'Onion', nl: 'Ui', cat: 'root', days: 120 },
+      { id: 'courgette', en: 'Courgette', nl: 'Courgette', cat: 'fruit_veg', days: 60 },
+      { id: 'cucumber', en: 'Cucumber', nl: 'Komkommer', cat: 'fruit_veg', days: 60 },
+      { id: 'spinach', en: 'Spinach', nl: 'Spinazie', cat: 'leafy', days: 40 },
+      { id: 'green-bean', en: 'Green Bean', nl: 'Sperzieboon', cat: 'legume', days: 70 },
+      { id: 'pea', en: 'Pea', nl: 'Doperwt', cat: 'legume', days: 65 },
+      { id: 'leek', en: 'Leek', nl: 'Prei', cat: 'root', days: 150 },
+      { id: 'broccoli', en: 'Broccoli', nl: 'Broccoli', cat: 'leafy', days: 100 },
+      { id: 'cauliflower', en: 'Cauliflower', nl: 'Bloemkool', cat: 'leafy', days: 110 },
+      { id: 'radish', en: 'Radish', nl: 'Radijs', cat: 'root', days: 30 },
+      { id: 'beetroot', en: 'Beetroot', nl: 'Rode biet', cat: 'root', days: 60 },
+      { id: 'bell-pepper', en: 'Bell Pepper', nl: 'Paprika', cat: 'fruit_veg', days: 80 },
+      { id: 'eggplant', en: 'Eggplant', nl: 'Aubergine', cat: 'fruit_veg', days: 90 },
+      { id: 'pumpkin', en: 'Pumpkin', nl: 'Pompoen', cat: 'fruit_veg', days: 110 },
+      { id: 'garlic', en: 'Garlic', nl: 'Knoflook', cat: 'root', days: 240 },
+      { id: 'kale', en: 'Kale', nl: 'Boerenkool', cat: 'leafy', days: 80 },
+      { id: 'cabbage', en: 'Cabbage', nl: 'Kool', cat: 'leafy', days: 100 },
+      { id: 'brussels-sprout', en: 'Brussels Sprout', nl: 'Spruitjes', cat: 'leafy', days: 160 },
+      { id: 'fennel', en: 'Fennel', nl: 'Venkel', cat: 'root', days: 90 },
+      { id: 'parsnip', en: 'Parsnip', nl: 'Pastinaak', cat: 'root', days: 180 },
+      { id: 'celeriac', en: 'Celeriac', nl: 'Knolselderij', cat: 'root', days: 160 },
+      { id: 'celery', en: 'Celery', nl: 'Bleekselderij', cat: 'leafy', days: 120 },
+      { id: 'rhubarb', en: 'Rhubarb', nl: 'Rabarber', cat: 'perennial', days: 365 },
+      { id: 'asparagus', en: 'Asparagus', nl: 'Asperge', cat: 'perennial', days: 730 },
+      { id: 'strawberry', en: 'Strawberry', nl: 'Aardbei', cat: 'fruit_veg', days: 60 },
+      { id: 'basil', en: 'Basil', nl: 'Basilicum', cat: 'herb', days: 40 },
+      { id: 'parsley', en: 'Parsley', nl: 'Peterselie', cat: 'herb', days: 70 },
+      { id: 'cilantro', en: 'Cilantro', nl: 'Koriander', cat: 'herb', days: 40 },
+      { id: 'mint', en: 'Mint', nl: 'Munt', cat: 'herb', days: 60 },
+      { id: 'rosemary', en: 'Rosemary', nl: 'Rozemarijn', cat: 'herb', days: 365 },
+      { id: 'thyme', en: 'Thyme', nl: 'Tijm', cat: 'herb', days: 120 },
+      { id: 'oregano', en: 'Oregano', nl: 'Oregano', cat: 'herb', days: 100 },
+      { id: 'sage', en: 'Sage', nl: 'Salie', cat: 'herb', days: 365 },
+      { id: 'chives', en: 'Chives', nl: 'Bieslook', cat: 'herb', days: 60 },
+      { id: 'dill', en: 'Dill', nl: 'Dille', cat: 'herb', days: 50 },
+      { id: 'arugula', en: 'Arugula', nl: 'Rucola', cat: 'leafy', days: 30 },
+      { id: 'bok-choy', en: 'Bok Choy', nl: 'Paksoi', cat: 'leafy', days: 50 },
+      { id: 'swiss-chard', en: 'Swiss Chard', nl: 'Snijbiet', cat: 'leafy', days: 60 },
+      { id: 'sweet-potato', en: 'Sweet Potato', nl: 'Zoete aardappel', cat: 'root', days: 110 },
+      { id: 'corn', en: 'Corn', nl: 'Maïs', cat: 'fruit_veg', days: 90 },
+      { id: 'melon', en: 'Melon', nl: 'Meloen', cat: 'fruit_veg', days: 90 },
+      { id: 'watermelon', en: 'Watermelon', nl: 'Watermeloen', cat: 'fruit_veg', days: 100 },
+      { id: 'chili', en: 'Chili', nl: 'Peper', cat: 'fruit_veg', days: 80 },
+      { id: 'ginger', en: 'Ginger', nl: 'Gember', cat: 'root', days: 240 },
+      { id: 'turmeric', en: 'Turmeric', nl: 'Kurkuma', cat: 'root', days: 240 },
+      { id: 'shallot', en: 'Shallot', nl: 'Sjalot', cat: 'root', days: 100 },
+      { id: 'horseradish', en: 'Horseradish', nl: 'Mierikswortel', cat: 'root', days: 200 },
+      { id: 'kohlrabi', en: 'Kohlrabi', nl: 'Kohlrabi', cat: 'root', days: 60 },
+      { id: 'okra', en: 'Okra', nl: 'Okra', cat: 'fruit_veg', days: 60 },
+      { id: 'wasabi', en: 'Wasabi', nl: 'Wasabi', cat: 'root', days: 500 },
+      { id: 'artichoke', en: 'Artichoke', nl: 'Artisjok', cat: 'perennial', days: 365 },
+      { id: 'horsetail', en: 'Horsetail', nl: 'Paardenstaart', cat: 'herb', days: 90 },
+      { id: 'lavender', en: 'Lavender', nl: 'Lavendel', cat: 'herb', days: 365 },
+      { id: 'lemon-balm', en: 'Lemon Balm', nl: 'Citroenmelisse', cat: 'herb', days: 70 },
+      { id: 'sorrel', en: 'Sorrel', nl: 'Zuring', cat: 'leafy', days: 60 },
+      { id: 'watercress', en: 'Watercress', nl: 'Waterkers', cat: 'leafy', days: 50 },
+      { id: 'lovage', en: 'Lovage', nl: 'Lavas', cat: 'herb', days: 90 },
+      { id: 'tarragon', en: 'Tarragon', nl: 'Dragon', cat: 'herb', days: 80 },
+      { id: 'bay-leaf', en: 'Bay Leaf', nl: 'Laurier', cat: 'herb', days: 365 },
+      { id: 'marjoram', en: 'Marjoram', nl: 'Marjolein', cat: 'herb', days: 90 },
+      { id: 'borage', en: 'Borage', nl: 'Komkommerkruid', cat: 'herb', days: 60 },
+      { id: 'savory', en: 'Savory', nl: 'Bonenkruid', cat: 'herb', days: 70 },
+      { id: 'endive', en: 'Endive', nl: 'Andijvie', cat: 'leafy', days: 80 },
+      { id: 'radicchio', en: 'Radicchio', nl: 'Radicchio', cat: 'leafy', days: 85 },
+      { id: 'chicory', en: 'Chicory', nl: 'Witlof', cat: 'root', days: 120 },
+      { id: 'broad-bean', en: 'Broad Bean', nl: 'Tuinboon', cat: 'legume', days: 90 },
+      { id: 'runner-bean', en: 'Runner Bean', nl: 'Pronkboon', cat: 'legume', days: 80 },
+      { id: 'lentil', en: 'Lentil', nl: 'Linzen', cat: 'legume', days: 100 },
+      { id: 'chickpea', en: 'Chickpea', nl: 'Kikkererwt', cat: 'legume', days: 100 },
+      { id: 'soybean', en: 'Soybean', nl: 'Sojaboon', cat: 'legume', days: 80 },
+      { id: 'sunflower', en: 'Sunflower', nl: 'Zonnebloem', cat: 'fruit_veg', days: 90 },
+      { id: 'peanut', en: 'Peanut', nl: 'Pinda', cat: 'legume', days: 120 },
+      { id: 'salsify', en: 'Salsify', nl: 'Schorseneer', cat: 'root', days: 150 },
+      { id: 'turnip', en: 'Turnip', nl: 'Meiraap', cat: 'root', days: 50 },
+      { id: 'rutabaga', en: 'Rutabaga', nl: 'Koolraap', cat: 'root', days: 90 },
+      { id: 'tomatillo', en: 'Tomatillo', nl: 'Tomatillo', cat: 'fruit_veg', days: 80 },
+      { id: 'stevia', en: 'Stevia', nl: 'Stevia', cat: 'herb', days: 100 },
+      { id: 'catnip', en: 'Catnip', nl: 'Kattenkruid', cat: 'herb', days: 80 },
+      { id: 'feverfew', en: 'Feverfew', nl: 'Moederkruid', cat: 'herb', days: 100 },
+      { id: 'hyssop', en: 'Hyssop', nl: 'Hysop', cat: 'herb', days: 90 },
+      { id: 'lemon-verbena', en: 'Lemon Verbena', nl: 'Citroenverbena', cat: 'herb', days: 90 },
+      { id: 'chamomile', en: 'Chamomile', nl: 'Kamille', cat: 'herb', days: 60 },
+      { id: 'nasturtium', en: 'Nasturtium', nl: 'Oost-Indische kers', cat: 'herb', days: 60 },
+      { id: 'calendula', en: 'Calendula', nl: 'Goudsbloem', cat: 'herb', days: 60 },
+      { id: 'purslane', en: 'Purslane', nl: 'Postelein', cat: 'leafy', days: 50 },
+      { id: 'tatsoi', en: 'Tatsoi', nl: 'Tatsoi', cat: 'leafy', days: 45 },
+      { id: 'mizuna', en: 'Mizuna', nl: 'Mizuna', cat: 'leafy', days: 40 },
+      { id: 'mustard-greens', en: 'Mustard Greens', nl: 'Mosterdblad', cat: 'leafy', days: 45 },
+      { id: 'collards', en: 'Collards', nl: 'Moeskool', cat: 'leafy', days: 75 },
+      { id: 'pak-choi', en: 'Pak Choi', nl: 'Paksoi', cat: 'leafy', days: 50 },
+      { id: 'lambs-lettuce', en: 'Lamb\'s Lettuce', nl: 'Veldsla', cat: 'leafy', days: 50 },
+      { id: 'iceberg-lettuce', en: 'Iceberg Lettuce', nl: 'Ijsbergsla', cat: 'leafy', days: 80 },
+      { id: 'romaine-lettuce', en: 'Romaine Lettuce', nl: 'Bindsla', cat: 'leafy', days: 70 },
+      { id: 'butterhead', en: 'Butterhead', nl: 'Kropsla', cat: 'leafy', days: 60 },
+      { id: 'red-leaf', en: 'Red Leaf Lettuce', nl: 'Rode sla', cat: 'leafy', days: 50 },
+      { id: 'little-gem', en: 'Little Gem', nl: 'Little Gem', cat: 'leafy', days: 50 }
+    ];
 
+    veggieBases.forEach(v => {
+      addBulkTranslation(v.id, v.en, v.nl);
+      vegLibraryData.push({
+        id: v.id,
+        category: v.cat,
+        growTime: v.days,
+        sun: 'Full Sun',
+        water: 'Regularly',
+        illnesses: 'General',
+        expectedHarvest: 'Varies',
+        calendar: { greenhouse: [3,4], outside: [5,6], home: [2,3] }
+      });
+    });
+
+    // Custom as 101st
+    vegLibraryData.push({ id: 'custom', category: 'herb', growTime: 60, sun: 'Full Sun', water: 'Moderate', illnesses: 'General', expectedHarvest: 'N/A', calendar: { greenhouse: [1,12], outside: [4,10], home: [1,12] } });
+
+    // UI Logic
     const workspace = document.getElementById('canvasWorkspace'), container = document.getElementById('canvasContainer');
 
     window.showScreen = function(screenId) {
@@ -764,32 +778,64 @@
       else if (mode === 'remove') { document.getElementById('removeBtn').classList.replace('border-neutral-200', 'border-red-500'); document.getElementById('removeBtn').classList.add('text-red-500'); clearSelection(); }
     }
 
-    window.duplicateSelectedLine = function() {
-      if (!currentSelectedElement || !currentSelectedElement.classList.contains('garden-line-container')) { alert("Select a line to duplicate first."); return; }
-      const original = currentSelectedElement;
-      const x = parseInt(original.style.left) + 20, y = parseInt(original.style.top) + 20, rot = original.dataset.rotation || 0, width = original.querySelector('.garden-line').style.width;
-      const containerDiv = document.createElement('div');
-      containerDiv.className = 'garden-line-container';
-      containerDiv.style.left = `${x}px`; containerDiv.style.top = `${y}px`;
-      containerDiv.dataset.rotation = rot; containerDiv.style.transform = `rotate(${rot}deg)`;
-      const lineDiv = document.createElement('div');
-      lineDiv.className = 'garden-line'; lineDiv.style.width = width;
-      const handleDiv = document.createElement('div');
-      handleDiv.className = 'stretch-handle';
-      containerDiv.appendChild(lineDiv); containerDiv.appendChild(handleDiv);
-      workspace.appendChild(containerDiv);
-      window.makeLineInteractive(containerDiv, lineDiv);
-      clearSelection(); currentSelectedElement = containerDiv; currentSelectedElement.classList.add('is-selected');
-    };
+    function getVegSVG(vegId) {
+      const tmpl = document.getElementById(`tmpl-${vegId}`);
+      if (tmpl) return tmpl.innerHTML;
+      const veg = vegLibraryData.find(v => v.id === vegId);
+      const category = veg ? veg.category : 'herb';
+      let fallbackId = 'tmpl-generic-leaf';
+      let color = '#4CAF50';
+      if (category === 'root') { fallbackId = 'tmpl-generic-root'; color = '#8D6E63'; }
+      else if (category === 'fruit_veg') { color = '#F44336'; }
+      else if (category === 'herb') { color = '#8BC34A'; }
+      let svgHtml = document.getElementById(fallbackId).innerHTML;
+      return svgHtml.replace('currentColor', color);
+    }
 
     window.populateVegMenu = function() {
       const menu = document.getElementById('vegSubMenu'); menu.innerHTML = '';
-      vegLibraryData.forEach(veg => {
+      
+      // 1. Add Custom option at the very beginning
+      const createVegBtn = (vegId) => {
         const btn = document.createElement('button');
-        btn.onclick = () => selectVeg(veg.id);
+        btn.onclick = () => selectVeg(vegId);
         btn.className = "flex flex-col items-center gap-1 p-3 rounded-xl bg-white border border-neutral-100 hover:border-bladgroen transition-colors shadow-sm";
-        btn.innerHTML = `<div class="scale-50 h-10 flex items-center justify-center">${document.getElementById('tmpl-'+veg.id).innerHTML}</div><span class="text-[9px] truncate w-full text-center text-neutral-500 font-medium">${window.getI18n(veg.id)}</span>`;
-        menu.appendChild(btn);
+        btn.innerHTML = `<div class="scale-50 h-10 flex items-center justify-center">${getVegSVG(vegId)}</div><span class="text-[9px] truncate w-full text-center text-neutral-500 font-medium">${window.getI18n(vegId)}</span>`;
+        return btn;
+      };
+      
+      menu.appendChild(createVegBtn('custom'));
+
+      // 2. Add the rest sorted alphabetically
+      const sorted = [...vegLibraryData]
+        .filter(v => v.id !== 'custom')
+        .sort((a,b) => window.getI18n(a.id).localeCompare(window.getI18n(b.id)));
+        
+      sorted.forEach(veg => {
+        menu.appendChild(createVegBtn(veg.id));
+      });
+    };
+
+    window.populateLibrary = function() {
+      const list = document.getElementById('libraryList'); list.innerHTML = '';
+      const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
+      const sortedData = [...vegLibraryData].sort((a, b) => window.getI18n(a.id).localeCompare(window.getI18n(b.id)));
+      sortedData.forEach(veg => {
+        const accordionItem = document.createElement('div');
+        accordionItem.className = "library-accordion-item bg-neutral-50 border border-neutral-100 rounded-2xl overflow-hidden mb-3 shadow-sm";
+        const renderRow = (label, value) => `<div class="flex justify-between items-center text-sm py-1"><span class="text-neutral-500 font-medium">${window.getI18n(label)}</span><span class="text-neutral-900 font-bold">${window.getI18n(value)}</span></div>`;
+        const renderCalRow = (labelKey, activeMonths) => {
+            let cells = '', labels = '';
+            months.forEach((m, i) => { cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${activeMonths.includes(i+1) ? 'bg-bladgroen' : 'bg-neutral-200'}"></div>`; labels += `<div class="w-full text-center text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">${window.getI18n(m)}</div>`; });
+            return `<div class="space-y-1.5 mb-4"><span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span><div class="grid grid-cols-12 gap-1 mb-1">${cells}</div><div class="grid grid-cols-12 gap-1">${labels}</div></div>`;
+        };
+        accordionItem.innerHTML = `
+          <button class="w-full flex items-center justify-between p-5 focus:outline-none bg-neutral-50 active:bg-neutral-100 transition-colors" onclick="this.parentElement.classList.toggle('active')">
+            <div class="flex items-center gap-4"><div class="bg-white p-1 rounded-lg border border-neutral-100 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${getVegSVG(veg.id)}</div><h3 class="text-lg font-bold text-neutral-900">${window.getI18n(veg.id)}</h3></div>
+            <svg class="chevron-icon w-6 h-6 stroke-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </button>
+          <div class="library-accordion-content bg-white"><div class="p-5 pt-2 space-y-5"><div class="space-y-1 border-t border-neutral-100 pt-5">${renderRow('growDays', (veg.growTime || '60') + ' days')}${renderRow('expectedHarvest', veg.expectedHarvest)}${renderRow('sunlight', veg.sun)}${renderRow('watering', veg.water)}${renderRow('illnesses', veg.illnesses)}</div><div class="pt-3 border-t border-neutral-100 space-y-4"><h4 class="text-xs font-bold text-bladgroen uppercase tracking-widest border-b border-bladgroen/10 pb-2">${window.getI18n('calendar')}</h4>${renderCalRow('greenhouse', veg.calendar.greenhouse)}${renderCalRow('outside', veg.calendar.outside)}${renderCalRow('atHome', veg.calendar.home)}</div></div></div>`;
+        list.appendChild(accordionItem);
       });
     };
 
@@ -809,7 +855,7 @@
         if (plantedDateStr && growDays) {
           const plantedDate = new Date(plantedDateStr); plantedDate.setHours(0,0,0,0);
           const diffTime = now - plantedDate; const diffDays = Math.ceil(diffTime / 86400000), daysLeft = growDays - diffDays;
-          const displayLabel = type === 'custom' ? cName : window.getI18n(type);
+          const displayLabel = type === 'custom' ? (cName || window.getI18n('custom')) : window.getI18n(type);
           if (daysLeft <= 0) readyHarvest.push({ type, label: `${displayLabel} ${window.getI18n('harvestReadyDesc')}` });
           else if (daysLeft <= 10) soonHarvest.push({ type, label: `${displayLabel} ${window.getI18n('harvestableIn')} ${daysLeft} ${window.getI18n('days')}` });
           const vegInfo = vegLibraryData.find(v => v.id === type);
@@ -818,34 +864,11 @@
       });
       const renderSection = (titleKey, icon, items) => {
         if (items.length === 0) return '';
-        let listHtml = items.map(item => `<div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-xl shadow-sm mb-2"><div class="shrink-0 scale-[0.4] w-10 h-10 flex items-center justify-center">${document.getElementById('tmpl-'+item.type).innerHTML}</div><span class="text-sm font-medium text-neutral-800">${item.label}</span></div>`).join('');
+        let listHtml = items.map(item => `<div class="flex items-center gap-3 p-3 bg-white border border-neutral-100 rounded-xl shadow-sm mb-2"><div class="shrink-0 scale-[0.4] w-10 h-10 flex items-center justify-center">${getVegSVG(item.type)}</div><span class="text-sm font-medium text-neutral-800">${item.label}</span></div>`).join('');
         return `<section><div class="flex items-center gap-2 mb-3"><span class="text-xl">${icon}</span><h3 class="text-xs font-bold text-neutral-400 uppercase tracking-widest">${window.getI18n(titleKey)}</h3></div>${listHtml}</section>`;
       };
       let finalHtml = renderSection('readyToHarvest', '🥕', readyHarvest) + renderSection('wateringList', '💧', waterNeed) + renderSection('comingSoon', '⏳', soonHarvest);
       content.innerHTML = finalHtml || `<div class="text-center py-20 px-8"><p class="text-neutral-400 font-medium">No tasks for today.</p></div>`;
-    };
-
-    window.populateLibrary = function() {
-      const list = document.getElementById('libraryList'); list.innerHTML = '';
-      const months = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'];
-      const sortedData = [...vegLibraryData].sort((a, b) => window.getI18n(a.id).localeCompare(window.getI18n(b.id)));
-      sortedData.forEach(veg => {
-        const accordionItem = document.createElement('div');
-        accordionItem.className = "library-accordion-item bg-neutral-50 border border-neutral-100 rounded-2xl overflow-hidden mb-3 shadow-sm";
-        const renderRow = (label, value) => `<div class="flex justify-between items-center text-sm py-1"><span class="text-neutral-500 font-medium">${window.getI18n(label)}</span><span class="text-neutral-900 font-bold">${window.getI18n(value)}</span></div>`;
-        const renderCalRow = (labelKey, activeMonths) => {
-            let cells = '', labels = '';
-            months.forEach((m, i) => { cells += `<div class="w-full h-4 flex items-center justify-center rounded-sm ${activeMonths.includes(i+1) ? 'bg-bladgroen' : 'bg-neutral-200'}"></div>`; labels += `<div class="w-full text-center text-[10px] font-bold text-neutral-400 uppercase tracking-tighter">${window.getI18n(m)}</div>`; });
-            return `<div class="space-y-1.5 mb-4"><span class="text-xs text-neutral-400 font-bold uppercase tracking-wider">${window.getI18n(labelKey)}</span><div class="grid grid-cols-12 gap-1 mb-1">${cells}</div><div class="grid grid-cols-12 gap-1">${labels}</div></div>`;
-        };
-        accordionItem.innerHTML = `
-          <button class="w-full flex items-center justify-between p-5 focus:outline-none bg-neutral-50 active:bg-neutral-100 transition-colors" onclick="this.parentElement.classList.toggle('active')">
-            <div class="flex items-center gap-4"><div class="bg-white p-1 rounded-lg border border-neutral-100 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${document.getElementById('tmpl-'+veg.id).innerHTML}</div><h3 class="text-lg font-bold text-neutral-900">${window.getI18n(veg.id)}</h3></div>
-            <svg class="chevron-icon w-6 h-6 stroke-neutral-400 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-          </button>
-          <div class="library-accordion-content bg-white"><div class="p-5 pt-2 space-y-5"><div class="space-y-1 border-t border-neutral-100 pt-5">${renderRow('growDays', veg.growTime + ' days')}${renderRow('expectedHarvest', veg.expectedHarvest)}${renderRow('sunlight', veg.sun)}${renderRow('watering', veg.water)}${renderRow('illnesses', veg.illnesses)}</div><div class="pt-3 border-t border-neutral-100 space-y-4"><h4 class="text-xs font-bold text-bladgroen uppercase tracking-widest border-b border-bladgroen/10 pb-2">${window.getI18n('calendar')}</h4>${renderCalRow('greenhouse', veg.calendar.greenhouse)}${renderCalRow('outside', veg.calendar.outside)}${renderCalRow('atHome', veg.calendar.home)}</div></div></div>`;
-        list.appendChild(accordionItem);
-      });
     };
 
     window.populateHarvestDiary = function() {
@@ -854,7 +877,7 @@
       [...window.userHarvests].sort((a, b) => new Date(b.date) - new Date(a.date)).forEach(h => {
         const item = document.createElement('div');
         item.className = "bg-neutral-50 border border-neutral-100 rounded-2xl p-4 flex items-center justify-between shadow-sm mb-3";
-        item.innerHTML = `<div class="flex items-center gap-4 overflow-hidden"><div class="bg-white p-1 rounded-xl border border-neutral-100 shrink-0 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${document.getElementById('tmpl-'+h.type).innerHTML}</div><div class="truncate"><h4 class="font-bold text-neutral-900 truncate">${h.type === 'custom' ? (h.customName || 'Custom') : window.getI18n(h.type)}</h4><p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">${new Date(h.date).toLocaleDateString()}</p></div></div><div class="flex flex-col items-end gap-2 shrink-0 ml-4"><div class="text-right"><p class="text-sm font-bold text-bladgroen">${h.weight}</p></div><button class="text-[9px] font-bold text-red-500 border border-red-200 bg-white px-2 py-1 rounded-md uppercase hover:bg-red-50 transition-colors" onclick="confirmRemoveHarvest(event, '${h.id}')">${window.getI18n('remove')}</button></div>`;
+        item.innerHTML = `<div class="flex items-center gap-4 overflow-hidden"><div class="bg-white p-1 rounded-xl border border-neutral-100 shrink-0 scale-50 w-12 h-12 flex items-center justify-center shadow-sm">${getVegSVG(h.type)}</div><div class="truncate"><h4 class="font-bold text-neutral-900 truncate">${h.type === 'custom' ? (h.customName || window.getI18n('custom')) : window.getI18n(h.type)}</h4><p class="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">${new Date(h.date).toLocaleDateString()}</p></div></div><div class="flex flex-col items-end gap-2 shrink-0 ml-4"><div class="text-right"><p class="text-sm font-bold text-bladgroen">${h.weight}</p></div><button class="text-[9px] font-bold text-red-500 border border-red-200 bg-white px-2 py-1 rounded-md uppercase hover:bg-red-50 transition-colors" onclick="confirmRemoveHarvest(event, '${h.id}')">${window.getI18n('remove')}</button></div>`;
         list.appendChild(item);
       });
     };
@@ -904,23 +927,23 @@
 
     function placeVegAt(x, y, type) {
       let customName = "";
-      if (type === 'custom') { customName = prompt(window.getI18n('promptCustomName')) || "My Plant"; }
+      if (type === 'custom') { customName = prompt(window.getI18n('promptCustomName')) || ""; }
       const vegDiv = document.createElement('div'); vegDiv.className = 'garden-veg-container';
       vegDiv.style.left = `${x - 60}px`; vegDiv.style.top = `${y - 65}px`;
       vegDiv.dataset.type = type; vegDiv.dataset.id = "id-" + Date.now();
       if (customName) vegDiv.dataset.customName = customName;
       const vegData = vegLibraryData.find(v => v.id === type);
-      vegDiv.dataset.growDays = vegData ? vegData.growTime : "";
+      vegDiv.dataset.growDays = vegData ? vegData.growTime : "60";
       const display = (type === 'custom' && customName) ? customName : window.getI18n(type);
-      vegDiv.innerHTML = `${document.getElementById(`tmpl-${type}`).innerHTML}<span class="text-[11px] text-neutral-600 mt-1 font-bold pointer-events-none text-center truncate w-full px-2">${display}</span>`;
+      vegDiv.innerHTML = `${getVegSVG(type)}<span class="text-[11px] text-neutral-600 mt-1 font-bold pointer-events-none text-center truncate w-full px-2">${display}</span>`;
       workspace.appendChild(vegDiv); window.makeVegInteractive(vegDiv);
       currentSelectedElement = vegDiv; currentSelectedElement.classList.add('is-selected');
     }
 
     window.openVegDetails = function(vegEl) {
       currentTargetVegElement = vegEl; const type = vegEl.dataset.type;
-      document.getElementById('detailVegTitle').innerText = type === 'custom' ? (vegEl.dataset.customName || 'Custom') : window.getI18n(type);
-      document.getElementById('detailVegIcon').innerHTML = `<div class="scale-[0.6]">${document.getElementById(`tmpl-${type}`).innerHTML}</div>`;
+      document.getElementById('detailVegTitle').innerText = (type === 'custom' && vegEl.dataset.customName) ? vegEl.dataset.customName : window.getI18n(type);
+      document.getElementById('detailVegIcon').innerHTML = `<div class="scale-[0.6]">${getVegSVG(type)}</div>`;
       document.getElementById('inputPlantedDate').value = vegEl.dataset.plantedDate || "";
       document.getElementById('inputGrowDays').value = vegEl.dataset.growDays || "";
       calculateHarvestDate(); showScreen('vegDetailScreen');
@@ -1019,5 +1042,4 @@
 
     window.addEventListener('DOMContentLoaded', () => { initGardenInteractions(); updateUI(); window.resetGardenView(); });
   </script>
-<!-- END: Application Scripts -->
 </body></html>
